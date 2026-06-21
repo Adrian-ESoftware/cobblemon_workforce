@@ -1,0 +1,10 @@
+architectury {
+    common rootProject.enabled_platforms.split(",")
+}
+
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+
+    // API comum do Cobblemon
+    modImplementation "com.cobblemon:mod:${rootProject.cobblemon_version}"
+}

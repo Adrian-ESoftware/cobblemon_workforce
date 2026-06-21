@@ -1,0 +1,33 @@
+modLoader = "kotlinforforge"
+loaderVersion = "[5,)"
+license = "MIT"
+
+[[mods]]
+modId = "cobblemon_electrified"
+version = "${version}"
+displayName = "Cobblemon Electrified"
+authors = "Zung"
+description = '''
+Addon para Cobblemon usando Kotlin, Fabric, NeoForge e Architectury.
+'''
+
+[[dependencies.cobblemon_electrified]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.cobblemon_electrified]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1]"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.cobblemon_electrified]]
+modId = "cobblemon"
+type = "required"
+versionRange = "*"
+ordering = "AFTER"
+side = "BOTH"

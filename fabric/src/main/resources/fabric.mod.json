@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "cobblemon_electrified",
+  "version": "${version}",
+  "name": "Cobblemon Electrified",
+  "description": "Addon para Cobblemon usando Kotlin e Architectury.",
+  "authors": ["Zung"],
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "com.nbp.cobblemon_electrified.fabric.CobblemonElectrifiedFabric"
+      }
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.17.0",
+    "minecraft": "1.21.1",
+    "fabric-language-kotlin": "*",
+    "cobblemon": "*"
+  }
+}
