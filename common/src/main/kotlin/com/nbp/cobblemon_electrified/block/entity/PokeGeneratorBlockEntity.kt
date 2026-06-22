@@ -288,14 +288,12 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
         if (mob != null && world.gameTime % 20 == 0L) {
             val wanderRange = CobblemonElectrifiedConfig.pokemonWanderRange
             if (mob.blockPosition().distManhattan(blockPos) > wanderRange) {
-                findVisibleSpawnPos(world, entity)?.let {
-                    mob.navigation.moveTo(
-                        it.x + 0.5,
-                        it.y.toDouble(),
-                        it.z + 0.5,
-                        RETURN_SPEED
-                    )
-                }
+                mob.navigation.moveTo(
+                    blockPos.x + 0.5,
+                    blockPos.y.toDouble(),
+                    blockPos.z + 0.5,
+                    RETURN_SPEED
+                )
             }
         }
     }
@@ -422,7 +420,7 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
 
     companion object {
         const val MAX_ENERGY = 100_000
-        private const val RETURN_SPEED = 1.35
+        private const val RETURN_SPEED = 0.75
 
         fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: PokeGeneratorBlockEntity) {
             if (!level.isClientSide) {
