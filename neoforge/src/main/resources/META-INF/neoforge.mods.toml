@@ -11,6 +11,9 @@ description = '''
 Addon para Cobblemon usando Kotlin, Fabric, NeoForge e Architectury.
 '''
 
+[[mixins]]
+config = "cobblemon_electrified-common.mixins.json"
+
 [[dependencies.cobblemon_electrified]]
 modId = "neoforge"
 type = "required"

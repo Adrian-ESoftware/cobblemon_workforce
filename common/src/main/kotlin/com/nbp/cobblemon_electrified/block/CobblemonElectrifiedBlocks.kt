@@ -1,37 +1,18 @@
 package com.nbp.cobblemon_electrified.block
 
-import com.nbp.cobblemon_electrified.CobblemonElectrified
-import net.minecraft.core.Registry
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.world.item.BlockItem
-import net.minecraft.world.item.Item
+import com.nbp.cobblemon_electrified.block.entity.PokeGeneratorBlockEntity
+import com.nbp.cobblemon_electrified.registry.ModRegistry
 import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.SoundType
-import net.minecraft.world.level.block.state.BlockBehaviour
-import net.minecraft.world.level.material.MapColor
+import net.minecraft.world.level.block.entity.BlockEntityType
 
 object CobblemonElectrifiedBlocks {
-    val POKE_GENERATOR: Block = registerBlock(
-        "poke_generator",
-        Block(
-            BlockBehaviour.Properties.of()
-                .mapColor(MapColor.WOOD)
-                .strength(1.5F)
-                .sound(SoundType.WOOD)
-        )
-    )
+    val POKE_GENERATOR: Block
+        get() = ModRegistry.POKE_GENERATOR.get()
+
+    val POKE_GENERATOR_BLOCK_ENTITY: BlockEntityType<PokeGeneratorBlockEntity>
+        get() = ModRegistry.POKE_GENERATOR_BLOCK_ENTITY.get()
 
     fun register() {
-        // Accessing the object initializes the block and item registries.
-    }
-
-    private fun registerBlock(name: String, block: Block): Block {
-        val id = ResourceLocation.fromNamespaceAndPath(CobblemonElectrified.MOD_ID, name)
-
-        Registry.register(BuiltInRegistries.BLOCK, id, block)
-        Registry.register(BuiltInRegistries.ITEM, id, BlockItem(block, Item.Properties()))
-
-        return block
+        // As instâncias são inicializadas e registradas pelo ModRegistry.
     }
 }

@@ -30,6 +30,8 @@ dependencies {
 
     modImplementation "com.cobblemon:fabric:${rootProject.cobblemon_version}"
 
+    modApi "dev.architectury:architectury-fabric:${rootProject.architectury_version}"
+
     common(project(path: ":common", configuration: "namedElements")) {
         transitive = false
     }

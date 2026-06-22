@@ -1,3 +1,5 @@
 {
-  "block.cobblemon_electrified.poke_generator": "Poke Generator"
+  "block.cobblemon_electrified.poke_generator": "Poke Power Generator",
+  "item.cobblemon_electrified.slot_upgrade": "Slot Upgrade",
+  "itemGroup.cobblemon_electrified.electrified_tab": "Cobblemon Electrified"
 }

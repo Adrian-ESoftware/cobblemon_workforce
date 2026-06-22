@@ -1,7 +1,8 @@
 {
   "variants": {
-    "": {
-      "model": "cobblemon_electrified:block/poke_generator"
-    }
+    "facing=north": { "model": "cobblemon_electrified:block/poke_generator" },
+    "facing=south": { "model": "cobblemon_electrified:block/poke_generator", "y": 180 },
+    "facing=east": { "model": "cobblemon_electrified:block/poke_generator", "y": 90 },
+    "facing=west": { "model": "cobblemon_electrified:block/poke_generator", "y": 270 }
   }
 }

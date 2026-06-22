@@ -7,4 +7,6 @@ dependencies {
 
     // API comum do Cobblemon
     modImplementation "com.cobblemon:mod:${rootProject.cobblemon_version}"
+
+    modApi "dev.architectury:architectury:${rootProject.architectury_version}"
 }

@@ -2,6 +2,9 @@ package com.nbp.cobblemon_electrified
 
 import com.cobblemon.mod.common.api.events.CobblemonEvents
 import com.nbp.cobblemon_electrified.block.CobblemonElectrifiedBlocks
+import com.nbp.cobblemon_electrified.config.CobblemonElectrifiedConfig
+import com.nbp.cobblemon_electrified.net.CobblemonElectrifiedNetwork
+import com.nbp.cobblemon_electrified.registry.ModRegistry
 import net.minecraft.network.chat.Component
 import org.slf4j.LoggerFactory
 
@@ -11,6 +14,9 @@ object CobblemonElectrified {
     private val logger = LoggerFactory.getLogger("CobblemonElectrified")
 
     fun init() {
+        CobblemonElectrifiedConfig.load()
+        CobblemonElectrifiedNetwork.register()
+        ModRegistry.init()
         logger.info("Meu Addon Cobblemon carregado!")
 
         CobblemonElectrifiedBlocks.register()
@@ -20,7 +26,7 @@ object CobblemonElectrified {
             val pokemon = event.pokemon
 
             player.sendSystemMessage(
-                Component.literal("Voce capturou: ${pokemon.species.name}")
+                Component.literal("You caught: ${pokemon.species.name}")
             )
         }
     }

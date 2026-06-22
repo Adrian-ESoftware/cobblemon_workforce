@@ -28,6 +28,8 @@ dependencies {
 
     modImplementation "com.cobblemon:neoforge:${rootProject.cobblemon_version}"
 
+    modApi "dev.architectury:architectury-neoforge:${rootProject.architectury_version}"
+
     implementation "thedarkcolour:kotlinforforge-neoforge:${rootProject.ktff_version}"
 
     common(project(path: ":common", configuration: "namedElements")) {
