@@ -29,6 +29,7 @@ object ModRegistry {
                 .mapColor(MapColor.WOOD)
                 .strength(1.5F)
                 .sound(SoundType.WOOD)
+                .noOcclusion()
         )
     }
 

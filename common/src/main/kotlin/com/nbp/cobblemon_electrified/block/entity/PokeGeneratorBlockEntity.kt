@@ -6,6 +6,7 @@ import com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
 import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_electrified.block.CobblemonElectrifiedBlocks
+import com.nbp.cobblemon_electrified.block.ElectrifiedBlock
 import com.nbp.cobblemon_electrified.config.CobblemonElectrifiedConfig
 import com.nbp.cobblemon_electrified.energy.PokeGeneratorEnergyOutput
 import java.util.UUID
@@ -28,6 +29,10 @@ import net.minecraft.world.phys.AABB
 
 class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
     BlockEntity(CobblemonElectrifiedBlocks.POKE_GENERATOR_BLOCK_ENTITY, pos, state) {
+
+    init {
+        println("DEBUG: PokeGeneratorBlockEntity created at $pos")
+    }
 
     var unlockedSlots: Int = 1
         private set
@@ -87,6 +92,7 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
+        println("DEBUG: addPokemon called at $blockPos for pokemon ${pokemon.uuid}, current stored count: ${storedPokemon.size}")
         if (!canAddPokemon() || storedPokemon.any { it.pokemonId == pokemon.uuid }) {
             return false
         }
@@ -251,7 +257,25 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
         val world = level as? ServerLevel ?: return
         val first = storedPokemon.firstOrNull() ?: return
         val pokemon = Cobblemon.storage.getPC(first.pcId, world.registryAccess())[first.pokemonId] ?: return
-        val existing = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == first.generatorLinkId }
+        
+        var existing = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == first.generatorLinkId }
+
+        if (existing == null) {
+            val searchBox = AABB(blockPos).inflate(CobblemonElectrifiedConfig.pokemonWanderRange.toDouble() + 10.0)
+            val entities = world.getEntitiesOfClass(Entity::class.java, searchBox) { ent ->
+                val tether = getTethering(ent)
+                tether != null && tether.pokemonId == first.pokemonId
+            }
+            if (entities.isNotEmpty()) {
+                existing = entities.first()
+                for (i in 1 until entities.size) {
+                    entities[i].discard()
+                }
+                runCatching {
+                    pokemon.javaClass.getMethod("setEntity", Entity::class.java).invoke(pokemon, existing)
+                }
+            }
+        }
 
         if (!CobblemonElectrifiedConfig.showPokemonOutside) {
             if (existing != null) {
@@ -420,13 +444,22 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
 
     companion object {
         const val MAX_ENERGY = 100_000
-        private const val RETURN_SPEED = 0.75
+        private const val RETURN_SPEED = 0.35
 
         fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: PokeGeneratorBlockEntity) {
             if (!level.isClientSide) {
+                if (level.gameTime % 40 == 0L) {
+                    println("DEBUG: Ticking block entity at $pos, pokemon count: ${blockEntity.storedPokemon.size}, state ON: ${state.getValue(ElectrifiedBlock.ON)}")
+                }
                 blockEntity.ensureVisiblePokemon()
                 blockEntity.generateEnergy()
                 PokeGeneratorEnergyOutput.pushEnergy(blockEntity)
+
+                val hasPokemon = blockEntity.hasPokemon()
+                if (state.getValue(ElectrifiedBlock.ON) != hasPokemon) {
+                    println("DEBUG: Changing block state ON to $hasPokemon at $pos")
+                    level.setBlock(pos, state.setValue(ElectrifiedBlock.ON, hasPokemon), 3)
+                }
             }
         }
 
