@@ -1,6 +1,7 @@
 package com.nbp.cobblemon_electrified.block.entity
 
 import com.cobblemon.mod.common.Cobblemon
+import com.cobblemon.mod.common.api.pokemon.stats.Stat
 import com.cobblemon.mod.common.api.pokemon.stats.Stats
 import com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
 import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
@@ -464,12 +465,34 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
         }
 
         private fun powerStatFor(pokemon: Pokemon): PowerStat {
-            val attack = pokemon.getStat(Stats.ATTACK)
-            val specialAttack = pokemon.getStat(Stats.SPECIAL_ATTACK)
-            return if (specialAttack > attack) {
-                PowerStat("Sp. Attack", specialAttack)
+            val attack = calculatedPowerStat(pokemon, Stats.ATTACK, "Attack")
+            val specialAttack = calculatedPowerStat(pokemon, Stats.SPECIAL_ATTACK, "Sp. Attack")
+            return if (specialAttack.value > attack.value) {
+                specialAttack
             } else {
-                PowerStat("Attack", attack)
+                attack
+            }
+        }
+
+        private fun calculatedPowerStat(pokemon: Pokemon, stat: Stat, name: String): PowerStat {
+            val baseStat = pokemon.form.baseStats[stat] ?: 0
+            val iv = pokemon.ivs.getOrDefault(stat)
+            val ev = pokemon.evs.getOrDefault(stat)
+            val ivBonus = iv * CobblemonElectrifiedConfig.ivBonusPercentPerPoint / 100.0
+            val evBonus = (ev / 4) * CobblemonElectrifiedConfig.evBonusPercentPer4Points / 100.0
+            val levelMultiplier = levelMultiplier(pokemon.level)
+            val generatedValue = (baseStat * (1.0 + ivBonus + evBonus) * levelMultiplier).toInt().coerceAtLeast(1)
+            return PowerStat(
+                name = "$name Base + IV/EV",
+                value = generatedValue
+            )
+        }
+
+        private fun levelMultiplier(level: Int): Double {
+            return if (level <= 50) {
+                level.coerceAtLeast(1) / 50.0
+            } else {
+                1.0 + ((level.coerceAtMost(100) - 50) / 50.0)
             }
         }
 

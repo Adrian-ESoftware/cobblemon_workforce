@@ -11,12 +11,16 @@ object CobblemonElectrifiedConfig {
     private const val ABSOLUTE_MAX_GENERATOR_POKEMON = 6
     private const val DEFAULT_SHOW_POKEMON_OUTSIDE = true
     private const val DEFAULT_POKEMON_WANDER_RANGE = 6
+    private const val DEFAULT_IV_BONUS_PERCENT_PER_POINT = 1.0
+    private const val DEFAULT_EV_BONUS_PERCENT_PER_4_POINTS = 1.0
 
     private const val CONFIG_FILE_NAME = "cobblemon_electrified.properties"
     private const val MAX_OUTPUT_PER_SIDE_KEY = "max_output_per_side"
     private const val GENERATOR_MAX_POKEMON_KEY = "generator_max_pokemon"
     private const val SHOW_POKEMON_OUTSIDE_KEY = "show_pokemon_outside"
     private const val POKEMON_WANDER_RANGE_KEY = "pokemon_wander_range"
+    private const val IV_BONUS_PERCENT_PER_POINT_KEY = "iv_bonus_percent_per_point"
+    private const val EV_BONUS_PERCENT_PER_4_POINTS_KEY = "ev_bonus_percent_per_4_points"
 
     private val logger = LoggerFactory.getLogger("CobblemonElectrifiedConfig")
     private val path: Path = Path.of("config", CONFIG_FILE_NAME)
@@ -31,6 +35,12 @@ object CobblemonElectrifiedConfig {
         private set
 
     var pokemonWanderRange: Int = DEFAULT_POKEMON_WANDER_RANGE
+        private set
+
+    var ivBonusPercentPerPoint: Double = DEFAULT_IV_BONUS_PERCENT_PER_POINT
+        private set
+
+    var evBonusPercentPer4Points: Double = DEFAULT_EV_BONUS_PERCENT_PER_4_POINTS
         private set
 
     fun load() {
@@ -73,6 +83,22 @@ object CobblemonElectrifiedConfig {
                 changed = true
             }
 
+        ivBonusPercentPerPoint = properties.getProperty(IV_BONUS_PERCENT_PER_POINT_KEY)
+            ?.toDoubleOrNull()
+            ?.takeIf { it >= 0.0 }
+            ?: DEFAULT_IV_BONUS_PERCENT_PER_POINT.also {
+                properties.setProperty(IV_BONUS_PERCENT_PER_POINT_KEY, it.toString())
+                changed = true
+            }
+
+        evBonusPercentPer4Points = properties.getProperty(EV_BONUS_PERCENT_PER_4_POINTS_KEY)
+            ?.toDoubleOrNull()
+            ?.takeIf { it >= 0.0 }
+            ?: DEFAULT_EV_BONUS_PERCENT_PER_4_POINTS.also {
+                properties.setProperty(EV_BONUS_PERCENT_PER_4_POINTS_KEY, it.toString())
+                changed = true
+            }
+
         if (changed) {
             Files.newOutputStream(path).use {
                 properties.store(it, "Cobblemon Electrified config")
@@ -98,6 +124,10 @@ object CobblemonElectrifiedConfig {
             $SHOW_POKEMON_OUTSIDE_KEY=$DEFAULT_SHOW_POKEMON_OUTSIDE
             # How far the Pokemon can wander from the generator block (Manhattan distance).
             $POKEMON_WANDER_RANGE_KEY=$DEFAULT_POKEMON_WANDER_RANGE
+            # Extra generation percent per IV point in the chosen Attack/Sp. Attack stat. 1.0 means 31 IV = +31%.
+            $IV_BONUS_PERCENT_PER_POINT_KEY=$DEFAULT_IV_BONUS_PERCENT_PER_POINT
+            # Extra generation percent per 4 EV points in the chosen Attack/Sp. Attack stat. 1.0 means 252 EV = +63%.
+            $EV_BONUS_PERCENT_PER_4_POINTS_KEY=$DEFAULT_EV_BONUS_PERCENT_PER_4_POINTS
             
             """.trimIndent()
         )
