@@ -4,9 +4,11 @@ import com.nbp.cobblemon_electrified.CobblemonElectrified
 import com.nbp.cobblemon_electrified.block.ElectrifiedBlock
 import com.nbp.cobblemon_electrified.block.FarmAssistantBlock
 import com.nbp.cobblemon_electrified.block.PokeVacuumBlock
+import com.nbp.cobblemon_electrified.block.WoodAssistantBlock
 import com.nbp.cobblemon_electrified.block.entity.FarmAssistantBlockEntity
 import com.nbp.cobblemon_electrified.block.entity.PokeGeneratorBlockEntity
 import com.nbp.cobblemon_electrified.block.entity.PokeVacuumBlockEntity
+import com.nbp.cobblemon_electrified.block.entity.WoodAssistantBlockEntity
 import dev.architectury.registry.registries.DeferredRegister
 import dev.architectury.registry.registries.RegistrySupplier
 import net.minecraft.core.registries.Registries
@@ -69,6 +71,20 @@ object ModRegistry {
         BlockItem(POKE_VACUUM.get(), Item.Properties())
     }
 
+    val WOOD_ASSISTANT: RegistrySupplier<Block> = BLOCKS.register("wood_assistant") {
+        WoodAssistantBlock(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.WOOD)
+                .strength(1.5F)
+                .sound(SoundType.WOOD)
+                .noOcclusion()
+        )
+    }
+
+    val WOOD_ASSISTANT_ITEM: RegistrySupplier<Item> = ITEMS.register("wood_assistant") {
+        BlockItem(WOOD_ASSISTANT.get(), Item.Properties())
+    }
+
     val POKE_GENERATOR_SLOT_UPGRADE: RegistrySupplier<Item> = ITEMS.register("slot_upgrade") {
         Item(Item.Properties())
     }
@@ -78,6 +94,10 @@ object ModRegistry {
     }
 
     val FARM_ASSISTANT_NORMAL_SLOT_UPGRADE: RegistrySupplier<Item> = ITEMS.register("normal_slot_upgrade") {
+        Item(Item.Properties())
+    }
+
+    val WOOD_ASSISTANT_PLANT_SLOT_UPGRADE: RegistrySupplier<Item> = ITEMS.register("plant_slot_upgrade") {
         Item(Item.Properties())
     }
 
@@ -96,6 +116,11 @@ object ModRegistry {
             BlockEntityType.Builder.of(::PokeVacuumBlockEntity, POKE_VACUUM.get()).build(null)
         }
 
+    val WOOD_ASSISTANT_BLOCK_ENTITY: RegistrySupplier<BlockEntityType<WoodAssistantBlockEntity>> =
+        BLOCK_ENTITY_TYPES.register("wood_assistant") {
+            BlockEntityType.Builder.of(::WoodAssistantBlockEntity, WOOD_ASSISTANT.get()).build(null)
+        }
+
     val ELECTRIFIED_TAB: RegistrySupplier<CreativeModeTab> = TABS.register("electrified_tab") {
         CreativeModeTab.builder(CreativeModeTab.Row.TOP, 0)
             .title(Component.translatable("itemGroup.cobblemon_electrified.electrified_tab"))
@@ -104,9 +129,11 @@ object ModRegistry {
                 output.accept(POKE_GENERATOR.get())
                 output.accept(FARM_ASSISTANT.get())
                 output.accept(POKE_VACUUM.get())
+                output.accept(WOOD_ASSISTANT.get())
                 output.accept(POKE_GENERATOR_SLOT_UPGRADE.get())
                 output.accept(FARM_ASSISTANT_WATER_SLOT_UPGRADE.get())
                 output.accept(FARM_ASSISTANT_NORMAL_SLOT_UPGRADE.get())
+                output.accept(WOOD_ASSISTANT_PLANT_SLOT_UPGRADE.get())
             }
             .build()
     }

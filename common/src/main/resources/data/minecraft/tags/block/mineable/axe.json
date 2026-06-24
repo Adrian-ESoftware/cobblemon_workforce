@@ -3,6 +3,7 @@
   "values": [
     "cobblemon_electrified:poke_generator",
     "cobblemon_electrified:farm_assistant",
-    "cobblemon_electrified:poke_vacuum"
+    "cobblemon_electrified:poke_vacuum",
+    "cobblemon_electrified:wood_assistant"
   ]
 }

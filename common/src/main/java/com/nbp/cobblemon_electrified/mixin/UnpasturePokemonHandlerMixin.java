@@ -5,6 +5,7 @@ import com.cobblemon.mod.common.net.serverhandling.pasture.UnpasturePokemonHandl
 import com.nbp.cobblemon_electrified.pasture.FarmAssistantPastureBridge;
 import com.nbp.cobblemon_electrified.pasture.PokeGeneratorPastureBridge;
 import com.nbp.cobblemon_electrified.pasture.PokeVacuumPastureBridge;
+import com.nbp.cobblemon_electrified.pasture.WoodAssistantPastureBridge;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,7 +19,8 @@ public class UnpasturePokemonHandlerMixin {
     private void cobblemonElectrified$handleGenerator(UnpasturePokemonPacket packet, MinecraftServer server, ServerPlayer player, CallbackInfo ci) {
         if (PokeGeneratorPastureBridge.handleUnpasturePokemon(packet, server, player)
                 || FarmAssistantPastureBridge.handleUnpasturePokemon(packet, server, player)
-                || PokeVacuumPastureBridge.handleUnpasturePokemon(packet, server, player)) {
+                || PokeVacuumPastureBridge.handleUnpasturePokemon(packet, server, player)
+                || WoodAssistantPastureBridge.handleUnpasturePokemon(packet, server, player)) {
             ci.cancel();
         }
     }
