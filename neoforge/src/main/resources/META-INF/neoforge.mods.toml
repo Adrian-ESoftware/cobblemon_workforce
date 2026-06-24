@@ -3,32 +3,32 @@ loaderVersion = "[5,)"
 license = "MIT"
 
 [[mods]]
-modId = "cobblemon_electrified"
+modId = "cobblemon_workforce"
 version = "${version}"
-displayName = "Cobblemon Electrified"
+displayName = "Cobblemon WorkForce"
 authors = "Zung"
 description = '''
 Addon para Cobblemon usando Kotlin, Fabric, NeoForge e Architectury.
 '''
 
 [[mixins]]
-config = "cobblemon_electrified-common.mixins.json"
+config = "cobblemon_workforce-common.mixins.json"
 
-[[dependencies.cobblemon_electrified]]
+[[dependencies.cobblemon_workforce]]
 modId = "neoforge"
 type = "required"
 versionRange = "[21.1,)"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.cobblemon_electrified]]
+[[dependencies.cobblemon_workforce]]
 modId = "minecraft"
 type = "required"
 versionRange = "[1.21.1]"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.cobblemon_electrified]]
+[[dependencies.cobblemon_workforce]]
 modId = "cobblemon"
 type = "required"
 versionRange = "*"

@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "com.nbp.cobblemon_workforce.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "FarmBlockMixin",
+    "PasturePokemonHandlerMixin",
+    "SetPastureConflictHandlerMixin",
+    "UnpastureAllPokemonHandlerMixin",
+    "UnpasturePokemonHandlerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

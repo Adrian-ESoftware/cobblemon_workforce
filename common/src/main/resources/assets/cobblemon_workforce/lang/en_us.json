@@ -1,0 +1,21 @@
+{
+  "block.cobblemon_workforce.poke_generator": "Poke Power Generator",
+  "block.cobblemon_workforce.farm_assistant": "Farm Assistant",
+  "block.cobblemon_workforce.poke_vacuum": "Poke Vacuum",
+  "block.cobblemon_workforce.poke_miner": "Poke Miner",
+  "block.cobblemon_workforce.poke_crusher": "Poke Crusher",
+  "block.cobblemon_workforce.poke_breeder": "Poke Breeder",
+  "block.cobblemon_workforce.wood_assistant": "Wood Assistant",
+  "item.cobblemon_workforce.iron_dust": "Iron Dust",
+  "item.cobblemon_workforce.copper_dust": "Copper Dust",
+  "item.cobblemon_workforce.gold_dust": "Gold Dust",
+  "item.cobblemon_workforce.coal_dust": "Coal Dust",
+  "item.cobblemon_workforce.lapis_dust": "Lapis Dust",
+  "item.cobblemon_workforce.diamond_dust": "Diamond Dust",
+  "item.cobblemon_workforce.emerald_dust": "Emerald Dust",
+  "item.cobblemon_workforce.slot_upgrade": "Slot Upgrade",
+  "item.cobblemon_workforce.water_slot_upgrade": "Water Slot Upgrade",
+  "item.cobblemon_workforce.normal_slot_upgrade": "Normal Slot Upgrade",
+  "item.cobblemon_workforce.plant_slot_upgrade": "Plant Slot Upgrade",
+  "itemGroup.cobblemon_workforce.workforce_tab": "Cobblemon WorkForce"
+}

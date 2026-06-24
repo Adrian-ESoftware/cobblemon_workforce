@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "cobblemon_electrified",
+  "id": "cobblemon_workforce",
   "version": "${version}",
-  "name": "Cobblemon Electrified",
+  "name": "Cobblemon WorkForce",
   "description": "Addon para Cobblemon usando Kotlin e Architectury.",
   "authors": ["Zung"],
   "environment": "*",
@@ -10,12 +10,12 @@
     "main": [
       {
         "adapter": "kotlin",
-        "value": "com.nbp.cobblemon_electrified.fabric.CobblemonElectrifiedFabric"
+        "value": "com.nbp.cobblemon_workforce.fabric.CobblemonWorkforceFabric"
       }
     ]
   },
   "mixins": [
-    "cobblemon_electrified-common.mixins.json"
+    "cobblemon_workforce-common.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.17.0",

@@ -1,9 +1,12 @@
 {
   "replace": false,
   "values": [
-    "cobblemon_electrified:poke_generator",
-    "cobblemon_electrified:farm_assistant",
-    "cobblemon_electrified:poke_vacuum",
-    "cobblemon_electrified:wood_assistant"
+    "cobblemon_workforce:poke_generator",
+    "cobblemon_workforce:farm_assistant",
+    "cobblemon_workforce:poke_vacuum",
+    "cobblemon_workforce:poke_miner",
+    "cobblemon_workforce:poke_crusher",
+    "cobblemon_workforce:poke_breeder",
+    "cobblemon_workforce:wood_assistant"
   ]
 }
