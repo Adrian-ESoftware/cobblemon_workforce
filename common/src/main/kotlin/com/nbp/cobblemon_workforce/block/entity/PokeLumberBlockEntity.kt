@@ -9,6 +9,7 @@ import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
 import java.util.UUID
 import kotlin.math.ceil
 import kotlin.math.min
@@ -36,8 +37,8 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 
-class WoodAssistantBlockEntity(pos: BlockPos, state: BlockState) :
-    BlockEntity(CobblemonWorkforceBlocks.WOOD_ASSISTANT_BLOCK_ENTITY, pos, state) {
+class PokeLumberBlockEntity(pos: BlockPos, state: BlockState) :
+    BlockEntity(CobblemonWorkforceBlocks.POKE_LUMBER_BLOCK_ENTITY, pos, state) {
 
     var normalSlotUnlocked: Boolean = false
         private set
@@ -231,9 +232,10 @@ class WoodAssistantBlockEntity(pos: BlockPos, state: BlockState) :
 
     private fun tickWood(world: ServerLevel) {
         ensureVisiblePokemon()
-        val fighter = storedPokemon.firstOrNull { it.role == SlotRole.FIGHTING }
+        val awakePokemon = storedPokemon.filter { PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId) }
+        val fighter = awakePokemon.firstOrNull { it.role == SlotRole.FIGHTING }
         val fightingPower = fighter?.power ?: 0
-        val normalPower = storedPokemon.filter { it.role == SlotRole.NORMAL }.sumOf { it.power }
+        val normalPower = awakePokemon.filter { it.role == SlotRole.NORMAL }.sumOf { it.power }
         val collectionBudget = normalPower.takeIf { it > 0 }?.let { CollectionBudget(collectionItemLimitFor(it)) }
         if (collectionBudget != null) {
             flushCollectionBuffer(world, collectionBudget)
@@ -264,7 +266,9 @@ class WoodAssistantBlockEntity(pos: BlockPos, state: BlockState) :
         }
 
         pathAttempts.remove(fighter.pokemonId)
-        val hasPlantHelper = storedPokemon.any { it.role == SlotRole.GRASS }
+        val hasPlantHelper = storedPokemon.any {
+            it.role == SlotRole.GRASS && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId)
+        }
         val logLimit = MAX_TREE_LOGS
         val leafLimit = if (hasPlantHelper) MAX_TREE_LEAVES else 0
         val blocks = connectedTreeBlocks(world, pos, logLimit, leafLimit)
@@ -739,9 +743,9 @@ class WoodAssistantBlockEntity(pos: BlockPos, state: BlockState) :
 
     companion object {
         private const val COLLECTION_BUFFER_SLOTS = 27
-        private const val MAX_TREE_LOGS = 512
-        private const val MAX_TREE_LEAVES = 1024
-        private const val MAX_TREE_SCAN_BLOCKS = 4096
+        private const val MAX_TREE_LOGS = 192
+        private const val MAX_TREE_LEAVES = 384
+        private const val MAX_TREE_SCAN_BLOCKS = 1536
         private const val SINGLE_TREE_HORIZONTAL_RADIUS = 8
         private const val SINGLE_TREE_BELOW_RANGE = 6
         private const val SINGLE_TREE_ABOVE_RANGE = 32
@@ -761,7 +765,7 @@ class WoodAssistantBlockEntity(pos: BlockPos, state: BlockState) :
             }
         }
 
-        fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: WoodAssistantBlockEntity) {
+        fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: PokeLumberBlockEntity) {
             if (level is ServerLevel) {
                 blockEntity.tickWood(level)
             }
@@ -788,22 +792,22 @@ class WoodAssistantBlockEntity(pos: BlockPos, state: BlockState) :
         private fun rangeForLevel(level: Int): Int {
             val clamped = level.coerceIn(1, 100)
             return if (clamped <= 50) {
-                8 + ((clamped - 1) * 24) / 49
+                8 + ((clamped - 1) * 16) / 49
             } else {
-                32 + ((clamped - 50) * 32) / 50
+                24 + ((clamped - 50) * 24) / 50
             }
         }
 
         private fun harvestIntervalForLevel(level: Int): Long {
             val clamped = level.coerceIn(1, 100)
             return if (clamped <= 50) {
-                (600 - ((clamped - 1) * 480) / 49).toLong()
+                (700 - ((clamped - 1) * 520) / 49).toLong()
             } else {
-                (120 - ((clamped - 50) * 80) / 50).toLong()
+                (180 - ((clamped - 50) * 100) / 50).toLong()
             }
         }
 
-        private fun collectionItemLimitFor(power: Int): Int = (power / 8).coerceIn(1, 256)
+        private fun collectionItemLimitFor(power: Int): Int = (4 + power / 12).coerceIn(4, 96)
     }
 
     data class StoredPokemon(

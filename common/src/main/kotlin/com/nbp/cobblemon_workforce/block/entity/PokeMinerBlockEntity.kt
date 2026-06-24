@@ -9,6 +9,7 @@ import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
 import java.util.UUID
 import kotlin.math.ceil
 import kotlin.math.abs
@@ -206,8 +207,12 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
 
     private fun tickMiner(world: ServerLevel) {
         ensureVisiblePokemon()
-        val miner = storedPokemon.firstOrNull { it.role == SlotRole.ROCK } ?: return
-        val normal = storedPokemon.firstOrNull { it.role == SlotRole.NORMAL }
+        val miner = storedPokemon.firstOrNull {
+            it.role == SlotRole.ROCK && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId)
+        } ?: return
+        val normal = storedPokemon.firstOrNull {
+            it.role == SlotRole.NORMAL && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId)
+        }
         if (normal != null) {
             flushCollectionBuffer(world, itemLimitFor(normal.power))
         }
@@ -600,10 +605,10 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
             return if (clamped <= 50) 100 - ((clamped - 1) * 60) / 49 else 40 - ((clamped - 50) * 25) / 50
         }
 
-        private fun itemLimitFor(power: Int): Int = (8 + power / 4).coerceIn(8, 256)
+        private fun itemLimitFor(power: Int): Int = (4 + power / 10).coerceIn(4, 96)
 
         private fun oreChanceFor(level: Int, power: Int): Double {
-            return (0.12 + level.coerceIn(1, 100) * 0.004 + power.coerceAtMost(300) * 0.0005).coerceIn(0.12, 0.75)
+            return (0.05 + level.coerceIn(1, 100) * 0.0025 + power.coerceAtMost(300) * 0.00025).coerceIn(0.05, 0.35)
         }
 
         private val ORE_TABLE = listOf(
@@ -613,8 +618,8 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
             OreEntry(Items.REDSTONE, 35, 22, 2, 5),
             OreEntry(Items.LAPIS_LAZULI, 40, 18, 2, 5),
             OreEntry(Items.RAW_GOLD, 55, 14, 1, 2),
-            OreEntry(Items.DIAMOND, 75, 5, 1, 1),
-            OreEntry(Items.EMERALD, 90, 3, 1, 1)
+            OreEntry(Items.DIAMOND, 85, 4, 1, 1),
+            OreEntry(Items.EMERALD, 95, 2, 1, 1)
         )
     }
 

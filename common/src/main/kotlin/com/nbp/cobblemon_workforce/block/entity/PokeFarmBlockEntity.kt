@@ -11,6 +11,7 @@ import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
 import java.util.UUID
 import kotlin.math.ceil
 import kotlin.math.min
@@ -37,8 +38,8 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.WorldlyContainer
 import net.minecraft.world.phys.AABB
 
-class FarmAssistantBlockEntity(pos: BlockPos, state: BlockState) :
-    BlockEntity(CobblemonWorkforceBlocks.FARM_ASSISTANT_BLOCK_ENTITY, pos, state) {
+class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
+    BlockEntity(CobblemonWorkforceBlocks.POKE_FARM_BLOCK_ENTITY, pos, state) {
 
     var waterSlotUnlocked: Boolean = false
         private set
@@ -237,9 +238,10 @@ class FarmAssistantBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun tickFarm(world: ServerLevel) {
-        val waterPower = storedPokemon.filter { it.slotRole == SlotRole.WATER }.sumOf { it.farmPower }
-        val grassPower = storedPokemon.filter { it.slotRole == SlotRole.GRASS }.sumOf { it.farmPower }
-        val normalPower = storedPokemon.filter { it.slotRole == SlotRole.NORMAL }.sumOf { it.farmPower }
+        val awakePokemon = storedPokemon.filter { PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId) }
+        val waterPower = awakePokemon.filter { it.slotRole == SlotRole.WATER }.sumOf { it.farmPower }
+        val grassPower = awakePokemon.filter { it.slotRole == SlotRole.GRASS }.sumOf { it.farmPower }
+        val normalPower = awakePokemon.filter { it.slotRole == SlotRole.NORMAL }.sumOf { it.farmPower }
         val collectionBudget = normalPower.takeIf { it > 0 }?.let { CollectionBudget(collectionItemLimitFor(it)) }
         if (collectionBudget != null) {
             flushCollectionBuffer(world, collectionBudget)
@@ -280,7 +282,7 @@ class FarmAssistantBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun hydrateFarmland(world: ServerLevel) {
-        val range = wateringRange()
+        val range = wateringRange(world)
         if (range <= 0) {
             return
         }
@@ -704,8 +706,10 @@ class FarmAssistantBlockEntity(pos: BlockPos, state: BlockState) :
         }
     }
 
-    private fun wateringRange(): Int {
-        val waterPower = storedPokemon.filter { it.slotRole == SlotRole.WATER }.sumOf { it.farmPower }
+    private fun wateringRange(world: ServerLevel): Int {
+        val waterPower = storedPokemon
+            .filter { it.slotRole == SlotRole.WATER && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId) }
+            .sumOf { it.farmPower }
         if (waterPower <= 0) {
             return 0
         }
@@ -713,8 +717,9 @@ class FarmAssistantBlockEntity(pos: BlockPos, state: BlockState) :
         return (BASE_WATERING_RANGE + waterPower / 128).coerceIn(BASE_WATERING_RANGE, MAX_WATERING_RANGE)
     }
 
-    private fun isWatering(farmlandPos: BlockPos): Boolean {
-        val range = wateringRange()
+    private fun isWatering(level: Level, farmlandPos: BlockPos): Boolean {
+        val world = level as? ServerLevel ?: return false
+        val range = wateringRange(world)
         val dx = kotlin.math.abs(farmlandPos.x - blockPos.x)
         val dy = kotlin.math.abs(farmlandPos.y - blockPos.y)
         val dz = kotlin.math.abs(farmlandPos.z - blockPos.z)
@@ -726,9 +731,9 @@ class FarmAssistantBlockEntity(pos: BlockPos, state: BlockState) :
         private const val RETURN_SPEED = 0.35
         private const val BASE_WATERING_RANGE = RANGE
         private const val MAX_WATERING_RANGE = 7
-        private const val MAX_ACTIONS_PER_TICK = 16
-        private const val MAX_HARVEST_MULTIPLIER = 8
-        private const val MAX_COLLECTION_ITEMS_PER_TICK = 256
+        private const val MAX_ACTIONS_PER_TICK = 8
+        private const val MAX_HARVEST_MULTIPLIER = 3
+        private const val MAX_COLLECTION_ITEMS_PER_TICK = 96
         private const val COLLECTION_BUFFER_SLOTS = 27
 
         @JvmStatic
@@ -737,8 +742,8 @@ class FarmAssistantBlockEntity(pos: BlockPos, state: BlockState) :
                 farmlandPos.offset(-MAX_WATERING_RANGE, -2, -MAX_WATERING_RANGE),
                 farmlandPos.offset(MAX_WATERING_RANGE, 2, MAX_WATERING_RANGE)
             ).any { pos ->
-                val assistant = level.getBlockEntity(pos) as? FarmAssistantBlockEntity
-                assistant?.isWatering(farmlandPos) == true
+                val assistant = level.getBlockEntity(pos) as? PokeFarmBlockEntity
+                assistant?.isWatering(level, farmlandPos) == true
             }
         }
 
@@ -767,18 +772,18 @@ class FarmAssistantBlockEntity(pos: BlockPos, state: BlockState) :
         }
 
         private fun actionCountFor(power: Int): Int {
-            return (power / 50).coerceIn(1, MAX_ACTIONS_PER_TICK)
+            return (1 + power / 80).coerceIn(1, MAX_ACTIONS_PER_TICK)
         }
 
         private fun harvestMultiplierFor(power: Int): Int {
-            return (1 + power / 100).coerceIn(1, MAX_HARVEST_MULTIPLIER)
+            return (1 + power / 180).coerceIn(1, MAX_HARVEST_MULTIPLIER)
         }
 
         private fun collectionItemLimitFor(power: Int): Int {
-            return (power / 8).coerceIn(1, MAX_COLLECTION_ITEMS_PER_TICK)
+            return (4 + power / 12).coerceIn(4, MAX_COLLECTION_ITEMS_PER_TICK)
         }
 
-        fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: FarmAssistantBlockEntity) {
+        fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: PokeFarmBlockEntity) {
             if (level is ServerLevel) {
                 blockEntity.ensureVisiblePokemon()
                 if (level.gameTime % 40L == 0L) {

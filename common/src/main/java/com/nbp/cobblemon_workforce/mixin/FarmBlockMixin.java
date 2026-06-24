@@ -1,6 +1,6 @@
 package com.nbp.cobblemon_workforce.mixin;
 
-import com.nbp.cobblemon_workforce.block.entity.FarmAssistantBlockEntity;
+import com.nbp.cobblemon_workforce.block.entity.PokeFarmBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -15,14 +15,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(FarmBlock.class)
 public class FarmBlockMixin {
     @Inject(method = "randomTick", at = @At("HEAD"), cancellable = true)
-    private void CobblemonWorkforce$keepMoistNearFarmAssistant(
+    private void CobblemonWorkforce$keepMoistNearPokeFarm(
         BlockState state,
         ServerLevel level,
         BlockPos pos,
         RandomSource random,
         CallbackInfo ci
     ) {
-        if (!FarmAssistantBlockEntity.isWateredByAssistant(level, pos)) {
+        if (!PokeFarmBlockEntity.isWateredByAssistant(level, pos)) {
             return;
         }
 

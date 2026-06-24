@@ -2,19 +2,19 @@ package com.nbp.cobblemon_workforce.registry
 
 import com.nbp.cobblemon_workforce.CobblemonWorkforce
 import com.nbp.cobblemon_workforce.block.PokeGeneratorBlock
-import com.nbp.cobblemon_workforce.block.FarmAssistantBlock
+import com.nbp.cobblemon_workforce.block.PokeFarmBlock
 import com.nbp.cobblemon_workforce.block.PokeBreederBlock
 import com.nbp.cobblemon_workforce.block.PokeCrusherBlock
 import com.nbp.cobblemon_workforce.block.PokeMinerBlock
 import com.nbp.cobblemon_workforce.block.PokeVacuumBlock
-import com.nbp.cobblemon_workforce.block.WoodAssistantBlock
-import com.nbp.cobblemon_workforce.block.entity.FarmAssistantBlockEntity
+import com.nbp.cobblemon_workforce.block.PokeLumberBlock
+import com.nbp.cobblemon_workforce.block.entity.PokeFarmBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeBreederBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeCrusherBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeGeneratorBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeMinerBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeVacuumBlockEntity
-import com.nbp.cobblemon_workforce.block.entity.WoodAssistantBlockEntity
+import com.nbp.cobblemon_workforce.block.entity.PokeLumberBlockEntity
 import dev.architectury.registry.registries.DeferredRegister
 import dev.architectury.registry.registries.RegistrySupplier
 import net.minecraft.core.registries.Registries
@@ -49,8 +49,8 @@ object ModRegistry {
         BlockItem(POKE_GENERATOR.get(), Item.Properties())
     }
 
-    val FARM_ASSISTANT: RegistrySupplier<Block> = BLOCKS.register("farm_assistant") {
-        FarmAssistantBlock(
+    val POKE_FARM: RegistrySupplier<Block> = BLOCKS.register("poke_farm") {
+        PokeFarmBlock(
             BlockBehaviour.Properties.of()
                 .mapColor(MapColor.WOOD)
                 .strength(1.5F)
@@ -59,8 +59,8 @@ object ModRegistry {
         )
     }
 
-    val FARM_ASSISTANT_ITEM: RegistrySupplier<Item> = ITEMS.register("farm_assistant") {
-        BlockItem(FARM_ASSISTANT.get(), Item.Properties())
+    val POKE_FARM_ITEM: RegistrySupplier<Item> = ITEMS.register("poke_farm") {
+        BlockItem(POKE_FARM.get(), Item.Properties())
     }
 
     val POKE_VACUUM: RegistrySupplier<Block> = BLOCKS.register("poke_vacuum") {
@@ -119,8 +119,8 @@ object ModRegistry {
         BlockItem(POKE_BREEDER.get(), Item.Properties())
     }
 
-    val WOOD_ASSISTANT: RegistrySupplier<Block> = BLOCKS.register("wood_assistant") {
-        WoodAssistantBlock(
+    val POKE_LUMBER: RegistrySupplier<Block> = BLOCKS.register("poke_lumber") {
+        PokeLumberBlock(
             BlockBehaviour.Properties.of()
                 .mapColor(MapColor.WOOD)
                 .strength(1.5F)
@@ -129,23 +129,23 @@ object ModRegistry {
         )
     }
 
-    val WOOD_ASSISTANT_ITEM: RegistrySupplier<Item> = ITEMS.register("wood_assistant") {
-        BlockItem(WOOD_ASSISTANT.get(), Item.Properties())
+    val POKE_LUMBER_ITEM: RegistrySupplier<Item> = ITEMS.register("poke_lumber") {
+        BlockItem(POKE_LUMBER.get(), Item.Properties())
     }
 
     val POKE_GENERATOR_SLOT_UPGRADE: RegistrySupplier<Item> = ITEMS.register("slot_upgrade") {
         Item(Item.Properties())
     }
 
-    val FARM_ASSISTANT_WATER_SLOT_UPGRADE: RegistrySupplier<Item> = ITEMS.register("water_slot_upgrade") {
+    val POKE_FARM_WATER_SLOT_UPGRADE: RegistrySupplier<Item> = ITEMS.register("water_slot_upgrade") {
         Item(Item.Properties())
     }
 
-    val FARM_ASSISTANT_NORMAL_SLOT_UPGRADE: RegistrySupplier<Item> = ITEMS.register("normal_slot_upgrade") {
+    val POKE_FARM_NORMAL_SLOT_UPGRADE: RegistrySupplier<Item> = ITEMS.register("normal_slot_upgrade") {
         Item(Item.Properties())
     }
 
-    val WOOD_ASSISTANT_PLANT_SLOT_UPGRADE: RegistrySupplier<Item> = ITEMS.register("plant_slot_upgrade") {
+    val POKE_LUMBER_PLANT_SLOT_UPGRADE: RegistrySupplier<Item> = ITEMS.register("plant_slot_upgrade") {
         Item(Item.Properties())
     }
 
@@ -162,9 +162,9 @@ object ModRegistry {
             BlockEntityType.Builder.of(::PokeGeneratorBlockEntity, POKE_GENERATOR.get()).build(null)
         }
 
-    val FARM_ASSISTANT_BLOCK_ENTITY: RegistrySupplier<BlockEntityType<FarmAssistantBlockEntity>> =
-        BLOCK_ENTITY_TYPES.register("farm_assistant") {
-            BlockEntityType.Builder.of(::FarmAssistantBlockEntity, FARM_ASSISTANT.get()).build(null)
+    val POKE_FARM_BLOCK_ENTITY: RegistrySupplier<BlockEntityType<PokeFarmBlockEntity>> =
+        BLOCK_ENTITY_TYPES.register("poke_farm") {
+            BlockEntityType.Builder.of(::PokeFarmBlockEntity, POKE_FARM.get()).build(null)
         }
 
     val POKE_VACUUM_BLOCK_ENTITY: RegistrySupplier<BlockEntityType<PokeVacuumBlockEntity>> =
@@ -187,9 +187,9 @@ object ModRegistry {
             BlockEntityType.Builder.of(::PokeBreederBlockEntity, POKE_BREEDER.get()).build(null)
         }
 
-    val WOOD_ASSISTANT_BLOCK_ENTITY: RegistrySupplier<BlockEntityType<WoodAssistantBlockEntity>> =
-        BLOCK_ENTITY_TYPES.register("wood_assistant") {
-            BlockEntityType.Builder.of(::WoodAssistantBlockEntity, WOOD_ASSISTANT.get()).build(null)
+    val POKE_LUMBER_BLOCK_ENTITY: RegistrySupplier<BlockEntityType<PokeLumberBlockEntity>> =
+        BLOCK_ENTITY_TYPES.register("poke_lumber") {
+            BlockEntityType.Builder.of(::PokeLumberBlockEntity, POKE_LUMBER.get()).build(null)
         }
 
     val WORKFORCE_TAB: RegistrySupplier<CreativeModeTab> = TABS.register("workforce_tab") {
@@ -198,16 +198,16 @@ object ModRegistry {
             .icon { ItemStack(POKE_GENERATOR.get()) }
             .displayItems { parameters, output ->
                 output.accept(POKE_GENERATOR.get())
-                output.accept(FARM_ASSISTANT.get())
+                output.accept(POKE_FARM.get())
                 output.accept(POKE_VACUUM.get())
                 output.accept(POKE_MINER.get())
                 output.accept(POKE_CRUSHER.get())
                 output.accept(POKE_BREEDER.get())
-                output.accept(WOOD_ASSISTANT.get())
+                output.accept(POKE_LUMBER.get())
                 output.accept(POKE_GENERATOR_SLOT_UPGRADE.get())
-                output.accept(FARM_ASSISTANT_WATER_SLOT_UPGRADE.get())
-                output.accept(FARM_ASSISTANT_NORMAL_SLOT_UPGRADE.get())
-                output.accept(WOOD_ASSISTANT_PLANT_SLOT_UPGRADE.get())
+                output.accept(POKE_FARM_WATER_SLOT_UPGRADE.get())
+                output.accept(POKE_FARM_NORMAL_SLOT_UPGRADE.get())
+                output.accept(POKE_LUMBER_PLANT_SLOT_UPGRADE.get())
                 output.accept(IRON_DUST.get())
                 output.accept(COPPER_DUST.get())
                 output.accept(GOLD_DUST.get())

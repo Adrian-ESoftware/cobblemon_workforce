@@ -10,6 +10,7 @@ import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.block.PokeGeneratorBlock
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
 import com.nbp.cobblemon_workforce.energy.PokeGeneratorEnergyOutput
+import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
 import java.util.UUID
 import kotlin.math.ceil
 import net.minecraft.core.BlockPos
@@ -245,12 +246,15 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
         nbt.put("Pokemon", list)
     }
 
-    private fun generateEnergy() {
-        if (!hasPokemon() || generationRate <= 0 || energyStored >= MAX_ENERGY) {
+    private fun generateEnergy(world: ServerLevel) {
+        val activeGenerationRate = storedPokemon
+            .filter { PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId) }
+            .sumOf { generationRateFor(it.powerStatValue) }
+        if (activeGenerationRate <= 0 || energyStored >= MAX_ENERGY) {
             return
         }
 
-        energyStored = (energyStored + generationRate).coerceAtMost(MAX_ENERGY)
+        energyStored = (energyStored + activeGenerationRate).coerceAtMost(MAX_ENERGY)
         setChanged()
     }
 
@@ -448,15 +452,15 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
         private const val RETURN_SPEED = 0.35
 
         fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: PokeGeneratorBlockEntity) {
-            if (!level.isClientSide) {
+            if (level is ServerLevel) {
                 if (level.gameTime % 40 == 0L) {
                     println("DEBUG: Ticking block entity at $pos, pokemon count: ${blockEntity.storedPokemon.size}, state ON: ${state.getValue(PokeGeneratorBlock.ON)}")
                 }
                 blockEntity.ensureVisiblePokemon()
-                blockEntity.generateEnergy()
+                blockEntity.generateEnergy(level)
                 PokeGeneratorEnergyOutput.pushEnergy(blockEntity)
 
-                val hasPokemon = blockEntity.hasPokemon()
+                val hasPokemon = blockEntity.storedPokemon.any { PokemonWorkforceStatus.isAwake(level, it.pcId, it.pokemonId) }
                 if (state.getValue(PokeGeneratorBlock.ON) != hasPokemon) {
                     println("DEBUG: Changing block state ON to $hasPokemon at $pos")
                     level.setBlock(pos, state.setValue(PokeGeneratorBlock.ON, hasPokemon), 3)
@@ -497,7 +501,7 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
         }
 
         private fun generationRateFor(statValue: Int): Int {
-            return statValue.coerceIn(1, 512)
+            return (4 + statValue / 4).coerceIn(4, 160)
         }
     }
 

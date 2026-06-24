@@ -9,6 +9,7 @@ import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
 import com.nbp.cobblemon_workforce.registry.ModRegistry
 import java.util.UUID
 import kotlin.math.ceil
@@ -195,9 +196,13 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun tickCrusher(world: ServerLevel) {
-        val pokemon = storedPokemon.firstOrNull { it.role == SlotRole.STEEL } ?: return
-        val normal = storedPokemon.firstOrNull { it.role == SlotRole.NORMAL }
         ensureVisiblePokemon()
+        val pokemon = storedPokemon.firstOrNull {
+            it.role == SlotRole.STEEL && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId)
+        } ?: return
+        val normal = storedPokemon.firstOrNull {
+            it.role == SlotRole.NORMAL && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId)
+        }
         if (normal != null) {
             flushOutputBuffer(world, itemLimitFor(normal.power))
         }
@@ -546,14 +551,14 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
             return (baseStat * (1.0 + ivBonus + evBonus) * levelMultiplier).toInt().coerceAtLeast(1)
         }
 
-        private fun rangeFor(power: Int): Int = (3 + power / 64).coerceIn(3, 12)
+        private fun rangeFor(power: Int): Int = (3 + power / 96).coerceIn(3, 8)
 
         private fun intervalFor(level: Int): Int {
             val clamped = level.coerceIn(1, 100)
-            return if (clamped <= 50) 100 - ((clamped - 1) * 60) / 49 else 40 - ((clamped - 50) * 25) / 50
+            return if (clamped <= 50) 120 - ((clamped - 1) * 70) / 49 else 50 - ((clamped - 50) * 20) / 50
         }
 
-        private fun itemLimitFor(power: Int): Int = (8 + power / 4).coerceIn(8, 256)
+        private fun itemLimitFor(power: Int): Int = (4 + power / 10).coerceIn(4, 64)
 
         private val CRUSHING_RESULTS: Map<Item, Item> by lazy {
             mapOf(

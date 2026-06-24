@@ -42,7 +42,7 @@ class PokeCrusherBlock(properties: Properties) : PokeGeneratorBlock(properties) 
         hand: InteractionHand,
         hit: BlockHitResult
     ): ItemInteractionResult {
-        if (!stack.`is`(ModRegistry.FARM_ASSISTANT_NORMAL_SLOT_UPGRADE.get())) {
+        if (!stack.`is`(ModRegistry.POKE_FARM_NORMAL_SLOT_UPGRADE.get())) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         }
         if (level.isClientSide || player !is ServerPlayer) {

@@ -6,11 +6,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "cobblemon_workforce:wood_assistant"
+          "name": "cobblemon_workforce:poke_lumber"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "cobblemon_workforce:blocks/wood_assistant"
+  "random_sequence": "cobblemon_workforce:blocks/poke_lumber"
 }

@@ -1,12 +1,12 @@
 package com.nbp.cobblemon_workforce.block
 
 import com.nbp.cobblemon_workforce.block.entity.PokeGeneratorBlockEntity
-import com.nbp.cobblemon_workforce.block.entity.FarmAssistantBlockEntity
+import com.nbp.cobblemon_workforce.block.entity.PokeFarmBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeBreederBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeCrusherBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeMinerBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeVacuumBlockEntity
-import com.nbp.cobblemon_workforce.block.entity.WoodAssistantBlockEntity
+import com.nbp.cobblemon_workforce.block.entity.PokeLumberBlockEntity
 import com.nbp.cobblemon_workforce.registry.ModRegistry
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -18,11 +18,11 @@ object CobblemonWorkforceBlocks {
     val POKE_GENERATOR_BLOCK_ENTITY: BlockEntityType<PokeGeneratorBlockEntity>
         get() = ModRegistry.POKE_GENERATOR_BLOCK_ENTITY.get()
 
-    val FARM_ASSISTANT: Block
-        get() = ModRegistry.FARM_ASSISTANT.get()
+    val POKE_FARM: Block
+        get() = ModRegistry.POKE_FARM.get()
 
-    val FARM_ASSISTANT_BLOCK_ENTITY: BlockEntityType<FarmAssistantBlockEntity>
-        get() = ModRegistry.FARM_ASSISTANT_BLOCK_ENTITY.get()
+    val POKE_FARM_BLOCK_ENTITY: BlockEntityType<PokeFarmBlockEntity>
+        get() = ModRegistry.POKE_FARM_BLOCK_ENTITY.get()
 
     val POKE_VACUUM: Block
         get() = ModRegistry.POKE_VACUUM.get()
@@ -48,11 +48,11 @@ object CobblemonWorkforceBlocks {
     val POKE_BREEDER_BLOCK_ENTITY: BlockEntityType<PokeBreederBlockEntity>
         get() = ModRegistry.POKE_BREEDER_BLOCK_ENTITY.get()
 
-    val WOOD_ASSISTANT: Block
-        get() = ModRegistry.WOOD_ASSISTANT.get()
+    val POKE_LUMBER: Block
+        get() = ModRegistry.POKE_LUMBER.get()
 
-    val WOOD_ASSISTANT_BLOCK_ENTITY: BlockEntityType<WoodAssistantBlockEntity>
-        get() = ModRegistry.WOOD_ASSISTANT_BLOCK_ENTITY.get()
+    val POKE_LUMBER_BLOCK_ENTITY: BlockEntityType<PokeLumberBlockEntity>
+        get() = ModRegistry.POKE_LUMBER_BLOCK_ENTITY.get()
 
     fun register() {
         // As instâncias são inicializadas e registradas pelo ModRegistry.

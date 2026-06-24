@@ -9,6 +9,7 @@ import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
 import java.util.UUID
 import kotlin.math.ceil
 import kotlin.math.min
@@ -157,6 +158,9 @@ class PokeVacuumBlockEntity(pos: BlockPos, state: BlockState) :
     private fun tickVacuum(world: ServerLevel) {
         val pokemon = storedPokemon ?: return
         ensureVisiblePokemon()
+        if (!PokemonWorkforceStatus.isAwake(world, pokemon.pcId, pokemon.pokemonId)) {
+            return
+        }
         flushCollectionBuffer(world, itemLimitFor(pokemon.vacuumPower))
         if (world.gameTime % intervalFor(pokemon.vacuumPower).toLong() != 0L) {
             return
@@ -536,11 +540,11 @@ class PokeVacuumBlockEntity(pos: BlockPos, state: BlockState) :
             return (baseStat * (1.0 + ivBonus + evBonus) * levelMultiplier).toInt().coerceAtLeast(1)
         }
 
-        private fun rangeFor(power: Int): Int = (3 + power / 64).coerceIn(3, 12)
+        private fun rangeFor(power: Int): Int = (3 + power / 80).coerceIn(3, 10)
 
-        private fun intervalFor(power: Int): Int = (40 - power / 8).coerceIn(5, 40)
+        private fun intervalFor(power: Int): Int = (50 - power / 10).coerceIn(12, 50)
 
-        private fun itemLimitFor(power: Int): Int = (8 + power / 4).coerceIn(8, 256)
+        private fun itemLimitFor(power: Int): Int = (4 + power / 8).coerceIn(4, 96)
     }
 
     data class StoredPokemon(

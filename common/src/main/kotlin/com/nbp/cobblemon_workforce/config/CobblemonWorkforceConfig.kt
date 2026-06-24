@@ -11,9 +11,10 @@ object CobblemonWorkforceConfig {
     private const val ABSOLUTE_MAX_GENERATOR_POKEMON = 6
     private const val DEFAULT_SHOW_POKEMON_OUTSIDE = true
     private const val DEFAULT_POKEMON_WANDER_RANGE = 6
-    private const val DEFAULT_IV_BONUS_PERCENT_PER_POINT = 1.0
-    private const val DEFAULT_EV_BONUS_PERCENT_PER_4_POINTS = 1.0
+    private const val DEFAULT_IV_BONUS_PERCENT_PER_POINT = 0.5
+    private const val DEFAULT_EV_BONUS_PERCENT_PER_4_POINTS = 0.25
     private const val DEFAULT_BREEDER_MAX_ANIMALS = 32
+    private const val DEFAULT_SLEEP_STATUS_PAUSES_MACHINES = true
 
     private const val CONFIG_FILE_NAME = "cobblemon_workforce.properties"
     private const val MAX_OUTPUT_PER_SIDE_KEY = "max_output_per_side"
@@ -23,6 +24,7 @@ object CobblemonWorkforceConfig {
     private const val IV_BONUS_PERCENT_PER_POINT_KEY = "iv_bonus_percent_per_point"
     private const val EV_BONUS_PERCENT_PER_4_POINTS_KEY = "ev_bonus_percent_per_4_points"
     private const val BREEDER_MAX_ANIMALS_KEY = "breeder_max_animals"
+    private const val SLEEP_STATUS_PAUSES_MACHINES_KEY = "sleep_status_pauses_machines"
 
     private val logger = LoggerFactory.getLogger("CobblemonWorkforceConfig")
     private val path: Path = Path.of("config", CONFIG_FILE_NAME)
@@ -46,6 +48,9 @@ object CobblemonWorkforceConfig {
         private set
 
     var breederMaxAnimals: Int = DEFAULT_BREEDER_MAX_ANIMALS
+        private set
+
+    var sleepStatusPausesMachines: Boolean = DEFAULT_SLEEP_STATUS_PAUSES_MACHINES
         private set
 
     fun load() {
@@ -112,6 +117,13 @@ object CobblemonWorkforceConfig {
                 changed = true
             }
 
+        sleepStatusPausesMachines = properties.getProperty(SLEEP_STATUS_PAUSES_MACHINES_KEY)
+            ?.let { it.trim().lowercase() == "true" }
+            ?: DEFAULT_SLEEP_STATUS_PAUSES_MACHINES.also {
+                properties.setProperty(SLEEP_STATUS_PAUSES_MACHINES_KEY, it.toString())
+                changed = true
+            }
+
         if (changed) {
             Files.newOutputStream(path).use {
                 properties.store(it, "Cobblemon WorkForce config")
@@ -137,12 +149,14 @@ object CobblemonWorkforceConfig {
             $SHOW_POKEMON_OUTSIDE_KEY=$DEFAULT_SHOW_POKEMON_OUTSIDE
             # How far the Pokemon can wander from the generator block (Manhattan distance).
             $POKEMON_WANDER_RANGE_KEY=$DEFAULT_POKEMON_WANDER_RANGE
-            # Extra generation percent per IV point in the chosen Attack/Sp. Attack stat. 1.0 means 31 IV = +31%.
+            # Extra work power percent per IV point in the chosen stat. 0.5 means 31 IV = +15.5%.
             $IV_BONUS_PERCENT_PER_POINT_KEY=$DEFAULT_IV_BONUS_PERCENT_PER_POINT
-            # Extra generation percent per 4 EV points in the chosen Attack/Sp. Attack stat. 1.0 means 252 EV = +63%.
+            # Extra work power percent per 4 EV points in the chosen stat. 0.25 means 252 EV = +15.75%.
             $EV_BONUS_PERCENT_PER_4_POINTS_KEY=$DEFAULT_EV_BONUS_PERCENT_PER_4_POINTS
             # Maximum vanilla animals allowed in one Poke Breeder work area before it stops breeding more.
             $BREEDER_MAX_ANIMALS_KEY=$DEFAULT_BREEDER_MAX_ANIMALS
+            # Whether Pokemon with the sleep status stop their assigned machines from working.
+            $SLEEP_STATUS_PAUSES_MACHINES_KEY=$DEFAULT_SLEEP_STATUS_PAUSES_MACHINES
             
             """.trimIndent()
         )

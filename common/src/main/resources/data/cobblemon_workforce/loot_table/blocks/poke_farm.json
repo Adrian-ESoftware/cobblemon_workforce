@@ -6,11 +6,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "cobblemon_workforce:farm_assistant"
+          "name": "cobblemon_workforce:poke_farm"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "cobblemon_workforce:blocks/farm_assistant"
+  "random_sequence": "cobblemon_workforce:blocks/poke_farm"
 }

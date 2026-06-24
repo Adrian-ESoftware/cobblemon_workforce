@@ -9,6 +9,7 @@ import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
 import java.util.UUID
 import kotlin.math.ceil
 import net.minecraft.core.BlockPos
@@ -131,6 +132,9 @@ class PokeBreederBlockEntity(pos: BlockPos, state: BlockState) :
     private fun tickBreeder(world: ServerLevel) {
         val pokemon = storedPokemon ?: return
         ensureVisiblePokemon()
+        if (!PokemonWorkforceStatus.isAwake(world, pokemon.pcId, pokemon.pokemonId)) {
+            return
+        }
         if (world.gameTime % intervalFor(pokemon.breederPower).toLong() != 0L) {
             return
         }
@@ -376,9 +380,9 @@ class PokeBreederBlockEntity(pos: BlockPos, state: BlockState) :
             return (baseStat * (1.0 + ivBonus + evBonus) * levelMultiplier).toInt().coerceAtLeast(1)
         }
 
-        private fun rangeFor(power: Int): Int = (4 + power / 36).coerceIn(4, 18)
+        private fun rangeFor(power: Int): Int = (4 + power / 80).coerceIn(4, 12)
 
-        private fun intervalFor(power: Int): Int = (240 - power / 2).coerceIn(40, 240)
+        private fun intervalFor(power: Int): Int = (360 - power / 2).coerceIn(100, 360)
     }
 
     data class StoredPokemon(
