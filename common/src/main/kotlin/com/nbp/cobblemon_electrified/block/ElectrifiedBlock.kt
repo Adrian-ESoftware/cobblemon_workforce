@@ -42,7 +42,7 @@ import net.minecraft.world.level.block.state.properties.EnumProperty
 import net.minecraft.util.StringRepresentable
 import com.nbp.cobblemon_electrified.block.CobblemonElectrifiedBlocks
 
-class ElectrifiedBlock(properties: Properties) : BaseEntityBlock(properties) {
+open class ElectrifiedBlock(properties: Properties) : BaseEntityBlock(properties) {
     companion object {
         val CODEC: MapCodec<ElectrifiedBlock> = simpleCodec(::ElectrifiedBlock)
         val ON: BooleanProperty = BooleanProperty.create("on")

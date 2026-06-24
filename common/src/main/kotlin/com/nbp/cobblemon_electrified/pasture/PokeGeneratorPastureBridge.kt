@@ -45,6 +45,28 @@ object PokeGeneratorPastureBridge {
         PastureLinkManager.createLink(player.uuid, PastureLink(linkId, pc.uuid, dimension, pos, permissions))
     }
 
+    private fun syncOpen(player: ServerPlayer, link: PastureLink, generator: PokeGeneratorBlockEntity) {
+        val maxPokemon = generator.slotLimit()
+        val permissions = PasturePermissions(
+            canUnpastureOthers = false,
+            canPasture = generator.canAddPokemon(),
+            maxPokemon = maxPokemon
+        )
+
+        OpenPasturePacket(
+            pcId = link.pcId,
+            pastureId = link.linkId,
+            limit = maxPokemon,
+            tetheredPokemon = generator.toPastureDTOs(player),
+            permissions = permissions
+        ).sendToPlayer(player)
+
+        PastureLinkManager.createLink(
+            player.uuid,
+            PastureLink(link.linkId, link.pcId, link.dimension, link.pos, permissions)
+        )
+    }
+
     @JvmStatic
     fun handlePasturePokemon(packet: PasturePokemonPacket, server: MinecraftServer, player: ServerPlayer): Boolean {
         val link = PastureLinkManager.getLinkByPlayer(player) ?: return false
@@ -79,6 +101,7 @@ object PokeGeneratorPastureBridge {
             return true
         }
         generator.toPastureDTOs(player).firstOrNull { it.pokemonId == pokemon.uuid }?.let { PokemonPasturedPacket(it).sendToPlayer(player) }
+        syncOpen(player, link, generator)
         player.sendSystemMessage(
             Component.literal("${pokemon.getDisplayName().string} is now producing ${generator.generationRate} RF/t from ${generator.powerStatName}.")
         )
@@ -96,6 +119,7 @@ object PokeGeneratorPastureBridge {
 
         generator.removePokemon(packet.pokemonId)
         PokemonUnpasturedPacket(packet.pokemonId).sendToPlayer(player)
+        syncOpen(player, link, generator)
         return true
     }
 
@@ -113,6 +137,7 @@ object PokeGeneratorPastureBridge {
             generator.removePokemon(it)
             PokemonUnpasturedPacket(it).sendToPlayer(player)
         }
+        syncOpen(player, link, generator)
         return true
     }
 

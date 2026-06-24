@@ -3,6 +3,7 @@
   "package": "com.nbp.cobblemon_electrified.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "FarmBlockMixin",
     "PasturePokemonHandlerMixin",
     "SetPastureConflictHandlerMixin",
     "UnpastureAllPokemonHandlerMixin",
