@@ -5,12 +5,14 @@ import com.nbp.cobblemon_workforce.block.PokeGeneratorBlock
 import com.nbp.cobblemon_workforce.block.PokeFarmBlock
 import com.nbp.cobblemon_workforce.block.PokeBreederBlock
 import com.nbp.cobblemon_workforce.block.PokeCrusherBlock
+import com.nbp.cobblemon_workforce.block.PokeFurnaceBlock
 import com.nbp.cobblemon_workforce.block.PokeMinerBlock
 import com.nbp.cobblemon_workforce.block.PokeVacuumBlock
 import com.nbp.cobblemon_workforce.block.PokeLumberBlock
 import com.nbp.cobblemon_workforce.block.entity.PokeFarmBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeBreederBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeCrusherBlockEntity
+import com.nbp.cobblemon_workforce.block.entity.PokeFurnaceBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeGeneratorBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeMinerBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeVacuumBlockEntity
@@ -119,6 +121,20 @@ object ModRegistry {
         BlockItem(POKE_BREEDER.get(), Item.Properties())
     }
 
+    val POKE_FURNACE: RegistrySupplier<Block> = BLOCKS.register("poke_furnace") {
+        PokeFurnaceBlock(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.WOOD)
+                .strength(1.5F)
+                .sound(SoundType.WOOD)
+                .noOcclusion()
+        )
+    }
+
+    val POKE_FURNACE_ITEM: RegistrySupplier<Item> = ITEMS.register("poke_furnace") {
+        BlockItem(POKE_FURNACE.get(), Item.Properties())
+    }
+
     val POKE_LUMBER: RegistrySupplier<Block> = BLOCKS.register("poke_lumber") {
         PokeLumberBlock(
             BlockBehaviour.Properties.of()
@@ -187,6 +203,11 @@ object ModRegistry {
             BlockEntityType.Builder.of(::PokeBreederBlockEntity, POKE_BREEDER.get()).build(null)
         }
 
+    val POKE_FURNACE_BLOCK_ENTITY: RegistrySupplier<BlockEntityType<PokeFurnaceBlockEntity>> =
+        BLOCK_ENTITY_TYPES.register("poke_furnace") {
+            BlockEntityType.Builder.of(::PokeFurnaceBlockEntity, POKE_FURNACE.get()).build(null)
+        }
+
     val POKE_LUMBER_BLOCK_ENTITY: RegistrySupplier<BlockEntityType<PokeLumberBlockEntity>> =
         BLOCK_ENTITY_TYPES.register("poke_lumber") {
             BlockEntityType.Builder.of(::PokeLumberBlockEntity, POKE_LUMBER.get()).build(null)
@@ -203,6 +224,7 @@ object ModRegistry {
                 output.accept(POKE_MINER.get())
                 output.accept(POKE_CRUSHER.get())
                 output.accept(POKE_BREEDER.get())
+                output.accept(POKE_FURNACE.get())
                 output.accept(POKE_LUMBER.get())
                 output.accept(POKE_GENERATOR_SLOT_UPGRADE.get())
                 output.accept(POKE_FARM_WATER_SLOT_UPGRADE.get())

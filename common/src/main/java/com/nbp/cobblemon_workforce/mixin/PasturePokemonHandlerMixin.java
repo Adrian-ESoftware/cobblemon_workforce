@@ -4,6 +4,7 @@ import com.cobblemon.mod.common.net.messages.server.pasture.PasturePokemonPacket
 import com.cobblemon.mod.common.net.serverhandling.pasture.PasturePokemonHandler;
 import com.nbp.cobblemon_workforce.pasture.PokeFarmPastureBridge;
 import com.nbp.cobblemon_workforce.pasture.PokeBreederPastureBridge;
+import com.nbp.cobblemon_workforce.pasture.PokeFurnacePastureBridge;
 import com.nbp.cobblemon_workforce.pasture.PokeGeneratorPastureBridge;
 import com.nbp.cobblemon_workforce.pasture.PokeCrusherPastureBridge;
 import com.nbp.cobblemon_workforce.pasture.PokeMinerPastureBridge;
@@ -26,6 +27,7 @@ public class PasturePokemonHandlerMixin {
                 || PokeMinerPastureBridge.handlePasturePokemon(packet, server, player)
                 || PokeCrusherPastureBridge.handlePasturePokemon(packet, server, player)
                 || PokeBreederPastureBridge.handlePasturePokemon(packet, server, player)
+                || PokeFurnacePastureBridge.handlePasturePokemon(packet, server, player)
                 || PokeLumberPastureBridge.handlePasturePokemon(packet, server, player)) {
             ci.cancel();
         }

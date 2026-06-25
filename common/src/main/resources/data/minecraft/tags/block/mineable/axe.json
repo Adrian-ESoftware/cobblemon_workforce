@@ -7,6 +7,7 @@
     "cobblemon_workforce:poke_miner",
     "cobblemon_workforce:poke_crusher",
     "cobblemon_workforce:poke_breeder",
+    "cobblemon_workforce:poke_furnace",
     "cobblemon_workforce:poke_lumber"
   ]
 }

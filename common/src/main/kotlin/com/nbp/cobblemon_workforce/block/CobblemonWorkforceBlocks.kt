@@ -4,6 +4,7 @@ import com.nbp.cobblemon_workforce.block.entity.PokeGeneratorBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeFarmBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeBreederBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeCrusherBlockEntity
+import com.nbp.cobblemon_workforce.block.entity.PokeFurnaceBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeMinerBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeVacuumBlockEntity
 import com.nbp.cobblemon_workforce.block.entity.PokeLumberBlockEntity
@@ -47,6 +48,12 @@ object CobblemonWorkforceBlocks {
 
     val POKE_BREEDER_BLOCK_ENTITY: BlockEntityType<PokeBreederBlockEntity>
         get() = ModRegistry.POKE_BREEDER_BLOCK_ENTITY.get()
+
+    val POKE_FURNACE: Block
+        get() = ModRegistry.POKE_FURNACE.get()
+
+    val POKE_FURNACE_BLOCK_ENTITY: BlockEntityType<PokeFurnaceBlockEntity>
+        get() = ModRegistry.POKE_FURNACE_BLOCK_ENTITY.get()
 
     val POKE_LUMBER: Block
         get() = ModRegistry.POKE_LUMBER.get()

@@ -1,0 +1,591 @@
+package com.nbp.cobblemon_workforce.block.entity
+
+import com.cobblemon.mod.common.Cobblemon
+import com.cobblemon.mod.common.api.pokemon.stats.Stat
+import com.cobblemon.mod.common.api.pokemon.stats.Stats
+import com.cobblemon.mod.common.api.types.ElementalTypes
+import com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
+import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
+import com.cobblemon.mod.common.pokemon.Pokemon
+import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
+import com.nbp.cobblemon_workforce.block.PokeGeneratorBlock
+import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
+import java.util.UUID
+import kotlin.math.ceil
+import kotlin.math.min
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.core.HolderLookup
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.WorldlyContainer
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.Mob
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.crafting.RecipeType
+import net.minecraft.world.item.crafting.SingleRecipeInput
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.AABB
+
+class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
+    BlockEntity(CobblemonWorkforceBlocks.POKE_FURNACE_BLOCK_ENTITY, pos, state),
+    WorldlyContainer {
+
+    private var storedPokemon: StoredPokemon? = null
+    private val items = mutableListOf(ItemStack.EMPTY, ItemStack.EMPTY)
+    private var cookProgress = 0
+
+    fun isOwner(player: ServerPlayer): Boolean = storedPokemon?.ownerId == player.uuid
+
+    fun canAddPokemon(): Boolean = storedPokemon == null
+
+    fun accepts(pokemon: Pokemon): Boolean = pokemon.types.any { it == ElementalTypes.FIRE }
+
+    fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
+        if (!canAddPokemon() || !accepts(pokemon)) {
+            return false
+        }
+        val linkId = UUID.randomUUID()
+        pokemon.tetheringId = linkId
+        storedPokemon = StoredPokemon(
+            ownerId = player.uuid,
+            pcId = pcId,
+            pokemonId = pokemon.uuid,
+            linkId = linkId,
+            ownerName = player.gameProfile.name,
+            pokemonName = pokemon.getDisplayName().string,
+            level = pokemon.level,
+            power = furnacePowerFor(pokemon)
+        )
+        setChanged()
+        ensureVisiblePokemon()
+        return true
+    }
+
+    fun removePokemon(pokemonId: UUID): Boolean {
+        val stored = storedPokemon ?: return false
+        if (stored.pokemonId != pokemonId) {
+            return false
+        }
+        releaseLinkedPokemon(stored)
+        storedPokemon = null
+        cookProgress = 0
+        setChanged()
+        ensureVisiblePokemon()
+        return true
+    }
+
+    fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
+        return storedPokemon?.let { it.ownerId == player.uuid && it.pokemonId == pokemonId } == true
+    }
+
+    fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
+        val stored = storedPokemon ?: return emptyList()
+        return if (stored.ownerId == player.uuid) listOf(stored.pokemonId) else emptyList()
+    }
+
+    fun releaseLinkedPokemon() {
+        storedPokemon?.let(::releaseLinkedPokemon)
+    }
+
+    private fun releaseLinkedPokemon(entry: StoredPokemon) {
+        val registryAccess = level?.server?.registryAccess() ?: return
+        val pokemon = Cobblemon.storage.getPC(entry.pcId, registryAccess)[entry.pokemonId] ?: return
+        getPokemonEntity(pokemon)
+            ?.takeIf { getTethering(it)?.tetheringId == entry.linkId }
+            ?.discard()
+        if (pokemon.tetheringId == entry.linkId) {
+            pokemon.tetheringId = null
+        }
+    }
+
+    fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
+        val entry = storedPokemon ?: return emptyList()
+        val registryAccess = level?.server?.registryAccess() ?: viewer.registryAccess()
+        val pokemon = Cobblemon.storage.getPC(entry.pcId, registryAccess)[entry.pokemonId] ?: return emptyList()
+        val entity = getPokemonEntity(pokemon)?.takeIf { getTethering(it)?.tetheringId == entry.linkId }
+        return listOf(
+            OpenPasturePacket.PasturePokemonDataDTO(
+                pokemonId = pokemon.uuid,
+                playerId = entry.ownerId,
+                displayName = pokemon.getDisplayName(),
+                ownerName = null,
+                species = pokemon.species.resourceIdentifier,
+                aspects = pokemon.aspects,
+                heldItem = pokemon.heldItem(),
+                level = pokemon.level,
+                entityKnown = entity != null,
+                behaviourFlags = emptySet()
+            )
+        )
+    }
+
+    fun insertInputFromPlayer(stack: ItemStack): Int {
+        val world = level as? ServerLevel ?: return 0
+        if (smeltingResult(world, stack) == null) {
+            return 0
+        }
+        val input = items[INPUT_SLOT]
+        if (!input.isEmpty && !ItemStack.isSameItemSameComponents(input, stack)) {
+            return 0
+        }
+        val capacity = min(stack.maxStackSize, maxStackSize) - if (input.isEmpty) 0 else input.count
+        val moved = min(stack.count, capacity)
+        if (moved <= 0) {
+            return 0
+        }
+        if (input.isEmpty) {
+            val inserted = stack.copy()
+            inserted.count = moved
+            items[INPUT_SLOT] = inserted
+        } else {
+            input.grow(moved)
+        }
+        stack.shrink(moved)
+        setChanged()
+        return moved
+    }
+
+    fun dropInventory(world: ServerLevel, pos: BlockPos) {
+        items.filterNot { it.isEmpty }.forEach { Block.popResource(world, pos, it.copy()) }
+        items[INPUT_SLOT] = ItemStack.EMPTY
+        items[OUTPUT_SLOT] = ItemStack.EMPTY
+        setChanged()
+    }
+
+    fun extractOutputToPlayer(player: Player): Boolean {
+        val output = items[OUTPUT_SLOT]
+        if (output.isEmpty) {
+            return false
+        }
+        val moving = output.copy()
+        if (!player.inventory.add(moving)) {
+            return false
+        }
+        items[OUTPUT_SLOT] = ItemStack.EMPTY
+        setChanged()
+        return true
+    }
+
+    override fun loadAdditional(nbt: CompoundTag, registryLookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, registryLookup)
+        storedPokemon = nbt.getCompound("Pokemon").takeUnless { it.isEmpty }?.let(StoredPokemon::fromNbt)
+        items[INPUT_SLOT] = ItemStack.parseOptional(registryLookup, nbt.getCompound("Input"))
+        items[OUTPUT_SLOT] = ItemStack.parseOptional(registryLookup, nbt.getCompound("Output"))
+        cookProgress = nbt.getInt("CookProgress")
+    }
+
+    override fun saveAdditional(nbt: CompoundTag, registryLookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, registryLookup)
+        storedPokemon?.let { nbt.put("Pokemon", it.toNbt()) }
+        nbt.put("Input", items[INPUT_SLOT].saveOptional(registryLookup))
+        nbt.put("Output", items[OUTPUT_SLOT].saveOptional(registryLookup))
+        nbt.putInt("CookProgress", cookProgress)
+    }
+
+    private fun tickFurnace(world: ServerLevel) {
+        val pokemon = storedPokemon ?: run {
+            cookProgress = 0
+            updateLitState(world, false)
+            return
+        }
+        ensureVisiblePokemon()
+        if (!PokemonWorkforceStatus.isAwake(world, pokemon.pcId, pokemon.pokemonId)) {
+            cookProgress = 0
+            updateLitState(world, false)
+            return
+        }
+        val input = items[INPUT_SLOT]
+        if (input.isEmpty) {
+            cookProgress = 0
+            updateLitState(world, false)
+            return
+        }
+        val result = smeltingResult(world, input)
+        if (result == null || !canOutput(result)) {
+            cookProgress = 0
+            updateLitState(world, false)
+            return
+        }
+
+        updateLitState(world, true)
+        cookProgress++
+        val interval = cookIntervalFor(pokemon.level)
+        if (cookProgress < interval) {
+            return
+        }
+        cookProgress = 0
+        val batch = batchSizeFor(pokemon.level, input, result)
+        if (batch <= 0) {
+            return
+        }
+        val output = result.copy()
+        output.count = result.count * batch
+        mergeOutput(output)
+        input.shrink(batch)
+        if (input.isEmpty) {
+            items[INPUT_SLOT] = ItemStack.EMPTY
+        }
+        setChanged()
+    }
+
+    private fun updateLitState(world: ServerLevel, active: Boolean) {
+        val state = blockState
+        if (state.hasProperty(PokeGeneratorBlock.ON) && state.getValue(PokeGeneratorBlock.ON) != active) {
+            world.setBlock(blockPos, state.setValue(PokeGeneratorBlock.ON, active), Block.UPDATE_CLIENTS)
+        }
+    }
+
+    private fun smeltingResult(world: ServerLevel, stack: ItemStack): ItemStack? {
+        if (stack.isEmpty) {
+            return null
+        }
+        val single = stack.copy()
+        single.count = 1
+        val input = SingleRecipeInput(single)
+        val recipe = world.recipeManager.getRecipeFor(RecipeType.SMELTING, input, world).orElse(null) ?: return null
+        val result = recipe.value().assemble(input, world.registryAccess())
+        return result.takeUnless { it.isEmpty }
+    }
+
+    private fun canOutput(result: ItemStack): Boolean {
+        val output = items[OUTPUT_SLOT]
+        if (output.isEmpty) {
+            return true
+        }
+        return ItemStack.isSameItemSameComponents(output, result) && output.count + result.count <= output.maxStackSize
+    }
+
+    private fun batchSizeFor(level: Int, input: ItemStack, result: ItemStack): Int {
+        val maxByLevel = batchLimitFor(level)
+        val output = items[OUTPUT_SLOT]
+        val outputSpace = if (output.isEmpty) result.maxStackSize else output.maxStackSize - output.count
+        return min(input.count, min(maxByLevel, outputSpace / result.count))
+    }
+
+    private fun mergeOutput(stack: ItemStack) {
+        val output = items[OUTPUT_SLOT]
+        if (output.isEmpty) {
+            items[OUTPUT_SLOT] = stack.copy()
+        } else if (ItemStack.isSameItemSameComponents(output, stack)) {
+            output.grow(stack.count)
+        }
+    }
+
+    override fun getContainerSize(): Int = SLOT_COUNT
+
+    override fun isEmpty(): Boolean = items.all { it.isEmpty }
+
+    override fun getItem(slot: Int): ItemStack = items.getOrElse(slot) { ItemStack.EMPTY }
+
+    override fun removeItem(slot: Int, amount: Int): ItemStack {
+        val removed = ContainerHelper.removeItem(items, slot, amount)
+        if (!removed.isEmpty) {
+            setChanged()
+        }
+        return removed
+    }
+
+    override fun removeItemNoUpdate(slot: Int): ItemStack {
+        return ContainerHelper.takeItem(items, slot)
+    }
+
+    override fun setItem(slot: Int, stack: ItemStack) {
+        if (slot !in 0 until SLOT_COUNT) {
+            return
+        }
+        items[slot] = stack
+        if (stack.count > maxStackSize) {
+            stack.count = maxStackSize
+        }
+        setChanged()
+    }
+
+    override fun stillValid(player: net.minecraft.world.entity.player.Player): Boolean {
+        return level?.getBlockEntity(blockPos) === this && player.distanceToSqr(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5) <= 64.0
+    }
+
+    override fun clearContent() {
+        items[INPUT_SLOT] = ItemStack.EMPTY
+        items[OUTPUT_SLOT] = ItemStack.EMPTY
+        setChanged()
+    }
+
+    override fun getSlotsForFace(side: Direction): IntArray {
+        return if (side == Direction.DOWN) intArrayOf(OUTPUT_SLOT) else intArrayOf(INPUT_SLOT)
+    }
+
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean {
+        val world = level as? ServerLevel ?: return slot == INPUT_SLOT
+        return slot == INPUT_SLOT && smeltingResult(world, stack) != null
+    }
+
+    override fun canPlaceItemThroughFace(slot: Int, stack: ItemStack, direction: Direction?): Boolean {
+        return slot == INPUT_SLOT && direction != Direction.DOWN && canPlaceItem(slot, stack)
+    }
+
+    override fun canTakeItemThroughFace(slot: Int, stack: ItemStack, direction: Direction): Boolean {
+        return slot == OUTPUT_SLOT && direction == Direction.DOWN
+    }
+
+    private fun ensureVisiblePokemon() {
+        val world = level as? ServerLevel ?: return
+        val entry = storedPokemon ?: return
+        ensureVisiblePokemon(world, entry)
+    }
+
+    private fun ensureVisiblePokemon(world: ServerLevel, entry: StoredPokemon) {
+        val pokemon = Cobblemon.storage.getPC(entry.pcId, world.registryAccess())[entry.pokemonId] ?: return
+        var existing = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == entry.linkId }
+
+        if (existing == null) {
+            val searchBox = AABB(blockPos).inflate(CobblemonWorkforceConfig.pokemonWanderRange.toDouble() + 10.0)
+            val entities = world.getEntitiesOfClass(Entity::class.java, searchBox) { ent ->
+                val tether = getTethering(ent)
+                tether != null && tether.pokemonId == entry.pokemonId
+            }
+            if (entities.isNotEmpty()) {
+                existing = entities.first()
+                for (i in 1 until entities.size) {
+                    entities[i].discard()
+                }
+                runCatching { pokemon.javaClass.getMethod("setEntity", Entity::class.java).invoke(pokemon, existing) }
+            }
+        }
+
+        if (!CobblemonWorkforceConfig.showPokemonOutside) {
+            existing?.discard()
+            if (pokemon.tetheringId == entry.linkId) {
+                pokemon.tetheringId = null
+            }
+            return
+        }
+
+        if (existing != null) {
+            keepTethered(existing, entry)
+            keepNearFurnace(world, existing)
+            return
+        }
+
+        pokemon.tetheringId = entry.linkId
+        val entity = createPokemonEntity(world, pokemon) ?: return
+        val spawnPos = findVisibleSpawnPos(world, entity) ?: return
+        entity.setPos(spawnPos.center.subtract(0.0, 0.5, 0.0))
+        if (world.addFreshEntity(entity)) {
+            setTethering(entity, createVisibleTethering(entry, entity.id))
+            keepTethered(entity, entry)
+            keepNearFurnace(world, entity)
+        }
+    }
+
+    private fun keepNearFurnace(world: ServerLevel, entity: Entity) {
+        val mob = entity as? Mob ?: return
+        if (world.gameTime % 20L == 0L && mob.blockPosition().distManhattan(blockPos) > CobblemonWorkforceConfig.pokemonWanderRange) {
+            mob.navigation.moveTo(blockPos.x + 0.5, blockPos.y.toDouble(), blockPos.z + 0.5, RETURN_SPEED)
+        }
+    }
+
+    private fun keepTethered(entity: Entity, entry: StoredPokemon) {
+        val tethering = getTethering(entity)
+        if (tethering == null || tethering.pasturePos != blockPos || tethering.tetheringId != entry.linkId) {
+            setTethering(entity, createVisibleTethering(entry, entity.id))
+        }
+    }
+
+    private fun createVisibleTethering(entry: StoredPokemon, entityId: Int): PokemonPastureBlockEntity.Tethering {
+        val wanderRange = CobblemonWorkforceConfig.pokemonWanderRange
+        val tetherRange = wanderRange + 8
+        return object : PokemonPastureBlockEntity.Tethering(
+            minRoamPos = blockPos.offset(-tetherRange, -3, -tetherRange),
+            maxRoamPos = blockPos.offset(tetherRange + 1, 5, tetherRange + 1),
+            playerId = entry.ownerId,
+            playerName = entry.ownerName,
+            tetheringId = entry.linkId,
+            pokemonId = entry.pokemonId,
+            pcId = entry.pcId,
+            entityId = entityId,
+            pasturePos = blockPos
+        ) {
+            override fun canRoamTo(pos: BlockPos): Boolean {
+                val dist = pos.distManhattan(blockPos)
+                return super.canRoamTo(pos) && dist in 2..wanderRange
+            }
+        }
+    }
+
+    private fun findVisibleSpawnPos(world: ServerLevel, entity: Entity): BlockPos? {
+        val width = ceil(entity.boundingBox.xsize).toInt().coerceAtLeast(1)
+        val directions = Direction.Plane.HORIZONTAL.toList()
+        val wanderRange = CobblemonWorkforceConfig.pokemonWanderRange
+        for (direction in directions) {
+            val idealPlace = blockPos.relative(direction, width + 1)
+            var box = entity.getDimensions(Pose.STANDING).makeBoundingBox(idealPlace.center.subtract(0.0, 0.5, 0.0))
+            for (i in 0..wanderRange) {
+                box = box.move(direction.stepX.toDouble(), 0.0, direction.stepZ.toDouble())
+                val fixed = makeSuitableY(world, idealPlace.relative(direction, i + 1), entity, box)
+                if (fixed != null) {
+                    return fixed
+                }
+            }
+        }
+        return null
+    }
+
+    private fun makeSuitableY(world: Level, pos: BlockPos, entity: Entity, box: AABB): BlockPos? {
+        if (world.collidesWithSuffocatingBlock(entity, box)) {
+            for (i in 1..15) {
+                val newBox = box.move(0.5, i.toDouble(), 0.5)
+                if (!world.collidesWithSuffocatingBlock(entity, newBox) && isSafeFloor(world, pos.offset(0, i - 1, 0), entity)) {
+                    return pos.offset(0, i, 0)
+                }
+            }
+        } else {
+            for (i in 1..15) {
+                val newBox = box.move(0.5, -i.toDouble(), 0.5)
+                if (world.collidesWithSuffocatingBlock(entity, newBox) && isSafeFloor(world, pos.offset(0, -i, 0), entity)) {
+                    return pos.offset(0, -i + 1, 0)
+                }
+            }
+        }
+        return null
+    }
+
+    private fun isSafeFloor(world: Level, pos: BlockPos, entity: Entity): Boolean {
+        val state = world.getBlockState(pos)
+        return !state.isAir && (
+            state.entityCanStandOn(world, pos, entity) ||
+                state.entityCanStandOnFace(world, pos, entity, Direction.DOWN)
+            )
+    }
+
+    private fun createPokemonEntity(world: ServerLevel, pokemon: Pokemon): Entity? {
+        return runCatching {
+            val entityClass = Class.forName("com.cobblemon.mod.common.entity.pokemon.PokemonEntity")
+            val entityType = Class.forName("com.cobblemon.mod.common.CobblemonEntities")
+                .getField("POKEMON")
+                .get(null) as EntityType<*>
+            val constructor = entityClass.getConstructor(Level::class.java, Pokemon::class.java, EntityType::class.java)
+            (constructor.newInstance(world, pokemon, entityType) as Entity).also {
+                it.javaClass.getMethod("refreshDimensions").invoke(it)
+            }
+        }.getOrElse {
+            Cobblemon.LOGGER.warn("Could not create visible Poke Furnace Pokemon entity", it)
+            null
+        }
+    }
+
+    private fun getPokemonEntity(pokemon: Pokemon): Entity? {
+        return runCatching { pokemon.javaClass.getMethod("getEntity").invoke(pokemon) as? Entity }.getOrNull()
+    }
+
+    private fun getTethering(entity: Entity): PokemonPastureBlockEntity.Tethering? {
+        return runCatching {
+            entity.javaClass.getMethod("getTethering").invoke(entity) as? PokemonPastureBlockEntity.Tethering
+        }.getOrNull()
+    }
+
+    private fun setTethering(entity: Entity, tethering: PokemonPastureBlockEntity.Tethering) {
+        runCatching {
+            entity.javaClass.getMethod("setTethering", PokemonPastureBlockEntity.Tethering::class.java).invoke(entity, tethering)
+        }
+    }
+
+    companion object {
+        private const val INPUT_SLOT = 0
+        private const val OUTPUT_SLOT = 1
+        private const val SLOT_COUNT = 2
+        private const val RETURN_SPEED = 0.35
+
+        fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: PokeFurnaceBlockEntity) {
+            if (level is ServerLevel) {
+                blockEntity.tickFurnace(level)
+            }
+        }
+
+        private fun furnacePowerFor(pokemon: Pokemon): Int {
+            val attack = calculatedPower(pokemon, Stats.ATTACK)
+            val specialAttack = calculatedPower(pokemon, Stats.SPECIAL_ATTACK)
+            return attack.coerceAtLeast(specialAttack)
+        }
+
+        private fun calculatedPower(pokemon: Pokemon, stat: Stat): Int {
+            val baseStat = pokemon.form.baseStats[stat] ?: 0
+            val iv = pokemon.ivs.getOrDefault(stat)
+            val ev = pokemon.evs.getOrDefault(stat)
+            val ivBonus = iv * CobblemonWorkforceConfig.ivBonusPercentPerPoint / 100.0
+            val evBonus = (ev / 4) * CobblemonWorkforceConfig.evBonusPercentPer4Points / 100.0
+            val levelMultiplier = if (pokemon.level <= 50) {
+                pokemon.level.coerceAtLeast(1) / 50.0
+            } else {
+                1.0 + ((pokemon.level.coerceAtMost(100) - 50) / 50.0)
+            }
+            return (baseStat * (1.0 + ivBonus + evBonus) * levelMultiplier).toInt().coerceAtLeast(1)
+        }
+
+        private fun cookIntervalFor(level: Int): Int {
+            val clamped = level.coerceIn(1, 100)
+            return if (clamped <= 50) {
+                200 - ((clamped - 1) * 100) / 49
+            } else {
+                100 - ((clamped - 50) * 50) / 50
+            }
+        }
+
+        private fun batchLimitFor(level: Int): Int {
+            val clamped = level.coerceIn(1, 100)
+            return if (clamped <= 50) {
+                1 + ((clamped - 1) * 3) / 49
+            } else {
+                4 + ((clamped - 50) * 12) / 50
+            }
+        }
+    }
+
+    data class StoredPokemon(
+        val ownerId: UUID,
+        val pcId: UUID,
+        val pokemonId: UUID,
+        val linkId: UUID,
+        val ownerName: String,
+        val pokemonName: String,
+        val level: Int,
+        val power: Int
+    ) {
+        fun toNbt(): CompoundTag {
+            return CompoundTag().also {
+                it.putUUID("OwnerId", ownerId)
+                it.putUUID("PcId", pcId)
+                it.putUUID("PokemonId", pokemonId)
+                it.putUUID("LinkId", linkId)
+                it.putString("OwnerName", ownerName)
+                it.putString("PokemonName", pokemonName)
+                it.putInt("Level", level)
+                it.putInt("Power", power)
+            }
+        }
+
+        companion object {
+            fun fromNbt(nbt: CompoundTag): StoredPokemon {
+                return StoredPokemon(
+                    ownerId = nbt.getUUID("OwnerId"),
+                    pcId = nbt.getUUID("PcId"),
+                    pokemonId = nbt.getUUID("PokemonId"),
+                    linkId = nbt.getUUID("LinkId"),
+                    ownerName = nbt.getString("OwnerName"),
+                    pokemonName = nbt.getString("PokemonName"),
+                    level = nbt.getInt("Level").takeIf { it > 0 } ?: 1,
+                    power = nbt.getInt("Power").takeIf { it > 0 } ?: 1
+                )
+            }
+        }
+    }
+}
