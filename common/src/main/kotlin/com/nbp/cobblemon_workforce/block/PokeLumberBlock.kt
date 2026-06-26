@@ -22,9 +22,11 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.BaseEntityBlock
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
-import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.level.storage.loot.LootParams
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams
 
 class PokeLumberBlock(properties: Properties) : PokeGeneratorBlock(properties) {
     companion object {
@@ -78,15 +80,25 @@ class PokeLumberBlock(properties: Properties) : PokeGeneratorBlock(properties) {
         return if (state.getValue(PART) == GeneratorPart.BOTTOM) PokeLumberBlockEntity(pos, state) else null
     }
 
+    override fun getDrops(state: BlockState, builder: LootParams.Builder): List<ItemStack> {
+        val part = state.getValue(PART)
+        if (part != GeneratorPart.BOTTOM) {
+            return emptyList()
+        }
+        val blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY)
+        val stack = if (blockEntity is PokeLumberBlockEntity) {
+            blockEntity.toDroppedStack()
+        } else {
+            ItemStack(this)
+        }
+        return listOf(stack)
+    }
+
     override fun playerDestroy(level: Level, player: Player, pos: BlockPos, state: BlockState, blockEntity: BlockEntity?, tool: ItemStack) {
-        player.awardStat(Stats.BLOCK_MINED.get(this))
-        player.causeFoodExhaustion(0.005F)
+        super.playerDestroy(level, player, pos, state, blockEntity, tool)
         if (level is ServerLevel && !player.isCreative && level.gameRules.getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
             if (state.getValue(PART) == GeneratorPart.BOTTOM) {
                 (blockEntity as? PokeLumberBlockEntity)?.dropStoredItems(level, pos)
-                val stack = (blockEntity as? PokeLumberBlockEntity)?.toDroppedStack() ?: ItemStack(this)
-                popResource(level, pos, stack)
-                state.spawnAfterBreak(level, pos, tool, true)
             }
         }
     }

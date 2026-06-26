@@ -173,21 +173,12 @@ class PokeVacuumBlockEntity(pos: BlockPos, state: BlockState) :
         val target = items.firstOrNull() ?: return
         val entity = visiblePokemonEntity(world, pokemon)
         if (entity == null || !isNearItem(entity, target)) {
-            pathAttempts++
-            if (movePokemonToItem(world, pokemon, entity, target) && pathAttempts < MAX_PATH_ATTEMPTS) {
-                return
-            }
+            movePokemonToItem(world, pokemon, entity, target)
         }
 
         pathAttempts = 0
         var remainingItems = itemLimitFor(pokemon.vacuumPower)
-        val pickupCenter = visiblePokemonEntity(world, pokemon) ?: entity
-        val collectibleItems = if (pickupCenter != null) {
-            items.filter { it.distanceToSqr(pickupCenter.x, pickupCenter.y, pickupCenter.z) <= PICKUP_DISTANCE_SQR }
-        } else {
-            listOf(target)
-        }
-        for (itemEntity in collectibleItems) {
+        for (itemEntity in items.take(MAX_ITEM_ENTITIES_PER_SWEEP)) {
             if (remainingItems <= 0) {
                 break
             }
@@ -513,10 +504,15 @@ class PokeVacuumBlockEntity(pos: BlockPos, state: BlockState) :
         private const val MAX_PATH_ATTEMPTS = 4
         private const val PICKUP_DISTANCE_SQR = 6.25
         private const val WORK_SPEED = 0.65
+        private const val MAX_ITEM_ENTITIES_PER_SWEEP = 16
 
         fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: PokeVacuumBlockEntity) {
             if (level is ServerLevel) {
                 blockEntity.tickVacuum(level)
+                val hasPokemon = blockEntity.storedPokemon?.let { com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus.isAwake(level, it.pcId, it.pokemonId) } == true
+                if (state.getValue(com.nbp.cobblemon_workforce.block.PokeGeneratorBlock.ON) != hasPokemon) {
+                    level.setBlock(pos, state.setValue(com.nbp.cobblemon_workforce.block.PokeGeneratorBlock.ON, hasPokemon), 3)
+                }
             }
         }
 
@@ -540,11 +536,11 @@ class PokeVacuumBlockEntity(pos: BlockPos, state: BlockState) :
             return (baseStat * (1.0 + ivBonus + evBonus) * levelMultiplier).toInt().coerceAtLeast(1)
         }
 
-        private fun rangeFor(power: Int): Int = (3 + power / 80).coerceIn(3, 10)
+        private fun rangeFor(power: Int): Int = (6 + power / 45).coerceIn(6, 18)
 
-        private fun intervalFor(power: Int): Int = (50 - power / 10).coerceIn(12, 50)
+        private fun intervalFor(power: Int): Int = (24 - power / 18).coerceIn(4, 24)
 
-        private fun itemLimitFor(power: Int): Int = (4 + power / 8).coerceIn(4, 96)
+        private fun itemLimitFor(power: Int): Int = (16 + power / 4).coerceIn(16, 192)
     }
 
     data class StoredPokemon(

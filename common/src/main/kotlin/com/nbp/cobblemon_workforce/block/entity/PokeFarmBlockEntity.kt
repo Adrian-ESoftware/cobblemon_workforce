@@ -789,6 +789,10 @@ class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
                 if (level.gameTime % 40L == 0L) {
                     blockEntity.tickFarm(level)
                 }
+                val hasPokemon = blockEntity.storedPokemon.any { com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus.isAwake(level, it.pcId, it.pokemonId) }
+                if (state.getValue(com.nbp.cobblemon_workforce.block.PokeGeneratorBlock.ON) != hasPokemon) {
+                    level.setBlock(pos, state.setValue(com.nbp.cobblemon_workforce.block.PokeGeneratorBlock.ON, hasPokemon), 3)
+                }
             }
         }
     }

@@ -10,10 +10,10 @@ import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.block.PokeGeneratorBlock
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.mixin.AbstractFurnaceBlockEntityAccessor
 import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
 import java.util.UUID
 import kotlin.math.ceil
-import kotlin.math.min
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.HolderLookup
@@ -28,10 +28,10 @@ import net.minecraft.world.entity.Mob
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.crafting.RecipeType
-import net.minecraft.world.item.crafting.SingleRecipeInput
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.AbstractFurnaceBlock
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
@@ -43,6 +43,7 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
     private var storedPokemon: StoredPokemon? = null
     private val items = mutableListOf(ItemStack.EMPTY, ItemStack.EMPTY)
     private var cookProgress = 0
+    private var boostProgress = 0.0
 
     fun isOwner(player: ServerPlayer): Boolean = storedPokemon?.ownerId == player.uuid
 
@@ -130,29 +131,7 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     fun insertInputFromPlayer(stack: ItemStack): Int {
-        val world = level as? ServerLevel ?: return 0
-        if (smeltingResult(world, stack) == null) {
-            return 0
-        }
-        val input = items[INPUT_SLOT]
-        if (!input.isEmpty && !ItemStack.isSameItemSameComponents(input, stack)) {
-            return 0
-        }
-        val capacity = min(stack.maxStackSize, maxStackSize) - if (input.isEmpty) 0 else input.count
-        val moved = min(stack.count, capacity)
-        if (moved <= 0) {
-            return 0
-        }
-        if (input.isEmpty) {
-            val inserted = stack.copy()
-            inserted.count = moved
-            items[INPUT_SLOT] = inserted
-        } else {
-            input.grow(moved)
-        }
-        stack.shrink(moved)
-        setChanged()
-        return moved
+        return 0
     }
 
     fun dropInventory(world: ServerLevel, pos: BlockPos) {
@@ -182,6 +161,7 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
         items[INPUT_SLOT] = ItemStack.parseOptional(registryLookup, nbt.getCompound("Input"))
         items[OUTPUT_SLOT] = ItemStack.parseOptional(registryLookup, nbt.getCompound("Output"))
         cookProgress = nbt.getInt("CookProgress")
+        boostProgress = nbt.getDouble("BoostProgress")
     }
 
     override fun saveAdditional(nbt: CompoundTag, registryLookup: HolderLookup.Provider) {
@@ -190,98 +170,100 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
         nbt.put("Input", items[INPUT_SLOT].saveOptional(registryLookup))
         nbt.put("Output", items[OUTPUT_SLOT].saveOptional(registryLookup))
         nbt.putInt("CookProgress", cookProgress)
+        nbt.putDouble("BoostProgress", boostProgress)
     }
 
     private fun tickFurnace(world: ServerLevel) {
         val pokemon = storedPokemon ?: run {
             cookProgress = 0
-            updateLitState(world, false)
+            boostProgress = 0.0
             return
         }
         ensureVisiblePokemon()
         if (!PokemonWorkforceStatus.isAwake(world, pokemon.pcId, pokemon.pokemonId)) {
             cookProgress = 0
-            updateLitState(world, false)
-            return
-        }
-        val input = items[INPUT_SLOT]
-        if (input.isEmpty) {
-            cookProgress = 0
-            updateLitState(world, false)
-            return
-        }
-        val result = smeltingResult(world, input)
-        if (result == null || !canOutput(result)) {
-            cookProgress = 0
-            updateLitState(world, false)
+            boostProgress = 0.0
             return
         }
 
-        updateLitState(world, true)
-        cookProgress++
-        val interval = cookIntervalFor(pokemon.level)
-        if (cookProgress < interval) {
-            return
-        }
+        val boosted = boostAdjacentFurnaces(world, pokemon)
         cookProgress = 0
-        val batch = batchSizeFor(pokemon.level, input, result)
-        if (batch <= 0) {
-            return
-        }
-        val output = result.copy()
-        output.count = result.count * batch
-        mergeOutput(output)
-        input.shrink(batch)
-        if (input.isEmpty) {
-            items[INPUT_SLOT] = ItemStack.EMPTY
-        }
-        setChanged()
+        if (boosted) setChanged()
     }
 
-    private fun updateLitState(world: ServerLevel, active: Boolean) {
-        val state = blockState
-        if (state.hasProperty(PokeGeneratorBlock.ON) && state.getValue(PokeGeneratorBlock.ON) != active) {
-            world.setBlock(blockPos, state.setValue(PokeGeneratorBlock.ON, active), Block.UPDATE_CLIENTS)
+    private fun boostAdjacentFurnaces(world: ServerLevel, pokemon: StoredPokemon): Boolean {
+        val furnaces = adjacentFurnaces(world)
+        if (furnaces.isEmpty()) {
+            boostProgress = 0.0
+            return false
         }
-    }
 
-    private fun smeltingResult(world: ServerLevel, stack: ItemStack): ItemStack? {
-        if (stack.isEmpty) {
-            return null
+        val heatedFurnaces = furnaces.filter { heatFurnace(world, it) }
+        if (heatedFurnaces.isEmpty()) {
+            boostProgress = 0.0
+            return false
         }
-        val single = stack.copy()
-        single.count = 1
-        val input = SingleRecipeInput(single)
-        val recipe = world.recipeManager.getRecipeFor(RecipeType.SMELTING, input, world).orElse(null) ?: return null
-        val result = recipe.value().assemble(input, world.registryAccess())
-        return result.takeUnless { it.isEmpty }
-    }
 
-    private fun canOutput(result: ItemStack): Boolean {
-        val output = items[OUTPUT_SLOT]
-        if (output.isEmpty) {
+        boostProgress += speedMultiplierFor(pokemon) - 1.0
+        val extraTicks = boostProgress.toInt()
+        boostProgress -= extraTicks
+        if (extraTicks <= 0) {
             return true
         }
-        return ItemStack.isSameItemSameComponents(output, result) && output.count + result.count <= output.maxStackSize
-    }
 
-    private fun batchSizeFor(level: Int, input: ItemStack, result: ItemStack): Int {
-        val maxByLevel = batchLimitFor(level)
-        val output = items[OUTPUT_SLOT]
-        val outputSpace = if (output.isEmpty) result.maxStackSize else output.maxStackSize - output.count
-        return min(input.count, min(maxByLevel, outputSpace / result.count))
-    }
-
-    private fun mergeOutput(stack: ItemStack) {
-        val output = items[OUTPUT_SLOT]
-        if (output.isEmpty) {
-            items[OUTPUT_SLOT] = stack.copy()
-        } else if (ItemStack.isSameItemSameComponents(output, stack)) {
-            output.grow(stack.count)
+        heatedFurnaces.filter(::canBoost).forEach { furnace ->
+            val accessor = furnace as AbstractFurnaceBlockEntityAccessor
+            val total = accessor.`cobblemon_workforce$getCookingTotalTime`()
+            val current = accessor.`cobblemon_workforce$getCookingProgress`()
+            accessor.`cobblemon_workforce$setCookingProgress`((current + extraTicks).coerceAtMost(total - 1))
+            furnace.setChanged()
         }
+        return true
     }
 
-    override fun getContainerSize(): Int = SLOT_COUNT
+    private fun adjacentFurnaces(world: ServerLevel): List<AbstractFurnaceBlockEntity> {
+        val positions = buildSet {
+            for (origin in listOf(blockPos, blockPos.above())) {
+                Direction.values().forEach { add(origin.relative(it)) }
+            }
+        }
+        return positions.mapNotNull { world.getBlockEntity(it) as? AbstractFurnaceBlockEntity }
+    }
+
+    private fun heatFurnace(world: ServerLevel, furnace: AbstractFurnaceBlockEntity): Boolean {
+        if (furnace.getItem(0).isEmpty) {
+            return false
+        }
+        val accessor = furnace as AbstractFurnaceBlockEntityAccessor
+        accessor.`cobblemon_workforce$setLitTime`(FUEL_FREE_HEAT_TICKS)
+        accessor.`cobblemon_workforce$setLitDuration`(FUEL_FREE_HEAT_TICKS)
+        val state = furnace.blockState
+        if (state.hasProperty(AbstractFurnaceBlock.LIT) && !state.getValue(AbstractFurnaceBlock.LIT)) {
+            world.setBlock(furnace.blockPos, state.setValue(AbstractFurnaceBlock.LIT, true), Block.UPDATE_CLIENTS)
+        }
+        furnace.setChanged()
+        return true
+    }
+
+    private fun canBoost(furnace: AbstractFurnaceBlockEntity): Boolean {
+        val accessor = furnace as AbstractFurnaceBlockEntityAccessor
+        val total = accessor.`cobblemon_workforce$getCookingTotalTime`()
+        val progress = accessor.`cobblemon_workforce$getCookingProgress`()
+        return accessor.`cobblemon_workforce$getLitTime`() > 0 && total > 1 && progress in 1 until total
+    }
+
+    private fun speedMultiplierFor(pokemon: StoredPokemon): Double {
+        val level = pokemon.level.coerceIn(1, 100)
+        val levelMultiplier = if (level <= 50) {
+            1.25 + ((level - 1) * 2.75 / 49.0)
+        } else {
+            4.0 + ((level - 50) * 4.0 / 50.0)
+        }
+        val statMultiplier = (pokemon.power / 100.0).coerceIn(0.85, 1.3)
+        return (levelMultiplier * statMultiplier).coerceAtLeast(1.0)
+    }
+
+    override fun getContainerSize(): Int = 0
 
     override fun isEmpty(): Boolean = items.all { it.isEmpty }
 
@@ -321,20 +303,19 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     override fun getSlotsForFace(side: Direction): IntArray {
-        return if (side == Direction.DOWN) intArrayOf(OUTPUT_SLOT) else intArrayOf(INPUT_SLOT)
+        return intArrayOf()
     }
 
     override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean {
-        val world = level as? ServerLevel ?: return slot == INPUT_SLOT
-        return slot == INPUT_SLOT && smeltingResult(world, stack) != null
+        return false
     }
 
     override fun canPlaceItemThroughFace(slot: Int, stack: ItemStack, direction: Direction?): Boolean {
-        return slot == INPUT_SLOT && direction != Direction.DOWN && canPlaceItem(slot, stack)
+        return false
     }
 
     override fun canTakeItemThroughFace(slot: Int, stack: ItemStack, direction: Direction): Boolean {
-        return slot == OUTPUT_SLOT && direction == Direction.DOWN
+        return false
     }
 
     private fun ensureVisiblePokemon() {
@@ -503,11 +484,16 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
         private const val INPUT_SLOT = 0
         private const val OUTPUT_SLOT = 1
         private const val SLOT_COUNT = 2
+        private const val FUEL_FREE_HEAT_TICKS = 20
         private const val RETURN_SPEED = 0.35
 
         fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: PokeFurnaceBlockEntity) {
             if (level is ServerLevel) {
                 blockEntity.tickFurnace(level)
+                val hasPokemon = blockEntity.storedPokemon?.let { com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus.isAwake(level, it.pcId, it.pokemonId) } == true
+                if (state.getValue(com.nbp.cobblemon_workforce.block.PokeGeneratorBlock.ON) != hasPokemon) {
+                    level.setBlock(pos, state.setValue(com.nbp.cobblemon_workforce.block.PokeGeneratorBlock.ON, hasPokemon), 3)
+                }
             }
         }
 
@@ -531,23 +517,6 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
             return (baseStat * (1.0 + ivBonus + evBonus) * levelMultiplier).toInt().coerceAtLeast(1)
         }
 
-        private fun cookIntervalFor(level: Int): Int {
-            val clamped = level.coerceIn(1, 100)
-            return if (clamped <= 50) {
-                200 - ((clamped - 1) * 100) / 49
-            } else {
-                100 - ((clamped - 50) * 50) / 50
-            }
-        }
-
-        private fun batchLimitFor(level: Int): Int {
-            val clamped = level.coerceIn(1, 100)
-            return if (clamped <= 50) {
-                1 + ((clamped - 1) * 3) / 49
-            } else {
-                4 + ((clamped - 50) * 12) / 50
-            }
-        }
     }
 
     data class StoredPokemon(

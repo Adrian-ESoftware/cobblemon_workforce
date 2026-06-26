@@ -1,22 +1,64 @@
 {
-  "variants": {
-    "facing=north,on=false,part=bottom": { "model": "cobblemon_workforce:block/farmer_bottom" },
-    "facing=south,on=false,part=bottom": { "model": "cobblemon_workforce:block/farmer_bottom", "y": 180 },
-    "facing=east,on=false,part=bottom": { "model": "cobblemon_workforce:block/farmer_bottom", "y": 90 },
-    "facing=west,on=false,part=bottom": { "model": "cobblemon_workforce:block/farmer_bottom", "y": 270 },
-
-    "facing=north,on=true,part=bottom": { "model": "cobblemon_workforce:block/farmer_bottom" },
-    "facing=south,on=true,part=bottom": { "model": "cobblemon_workforce:block/farmer_bottom", "y": 180 },
-    "facing=east,on=true,part=bottom": { "model": "cobblemon_workforce:block/farmer_bottom", "y": 90 },
-    "facing=west,on=true,part=bottom": { "model": "cobblemon_workforce:block/farmer_bottom", "y": 270 },
-
-    "facing=north,on=false,part=top": { "model": "cobblemon_workforce:block/farmer_top" },
-    "facing=south,on=false,part=top": { "model": "cobblemon_workforce:block/farmer_top", "y": 180 },
-    "facing=east,on=false,part=top": { "model": "cobblemon_workforce:block/farmer_top", "y": 90 },
-    "facing=west,on=false,part=top": { "model": "cobblemon_workforce:block/farmer_top", "y": 270 },
-    "facing=north,on=true,part=top": { "model": "cobblemon_workforce:block/farmer_top" },
-    "facing=south,on=true,part=top": { "model": "cobblemon_workforce:block/farmer_top", "y": 180 },
-    "facing=east,on=true,part=top": { "model": "cobblemon_workforce:block/farmer_top", "y": 90 },
-    "facing=west,on=true,part=top": { "model": "cobblemon_workforce:block/farmer_top", "y": 270 }
-  }
+    "variants":  {
+                     "facing=south,on=false,part=top":  {
+                                                            "model":  "cobblemon_workforce:block/power_generator_top",
+                                                            "y":  180
+                                                        },
+                     "facing=south,on=false,part=bottom":  {
+                                                               "model":  "cobblemon_workforce:block/power_generator_farmer",
+                                                               "y":  180
+                                                           },
+                     "facing=east,on=false,part=bottom":  {
+                                                              "model":  "cobblemon_workforce:block/power_generator_farmer",
+                                                              "y":  90
+                                                          },
+                     "facing=south,on=true,part=top":  {
+                                                           "model":  "cobblemon_workforce:block/power_generator_on_top",
+                                                           "y":  180
+                                                       },
+                     "facing=west,on=false,part=top":  {
+                                                           "model":  "cobblemon_workforce:block/power_generator_top",
+                                                           "y":  270
+                                                       },
+                     "facing=north,on=true,part=bottom":  {
+                                                              "model":  "cobblemon_workforce:block/power_generator_farmer_on"
+                                                          },
+                     "facing=north,on=false,part=top":  {
+                                                            "model":  "cobblemon_workforce:block/power_generator_top"
+                                                        },
+                     "facing=east,on=true,part=top":  {
+                                                          "model":  "cobblemon_workforce:block/power_generator_on_top",
+                                                          "y":  90
+                                                      },
+                     "facing=west,on=true,part=bottom":  {
+                                                             "model":  "cobblemon_workforce:block/power_generator_farmer_on",
+                                                             "y":  270
+                                                         },
+                     "facing=north,on=false,part=bottom":  {
+                                                               "model":  "cobblemon_workforce:block/power_generator_farmer"
+                                                           },
+                     "facing=north,on=true,part=top":  {
+                                                           "model":  "cobblemon_workforce:block/power_generator_on_top"
+                                                       },
+                     "facing=east,on=false,part=top":  {
+                                                           "model":  "cobblemon_workforce:block/power_generator_top",
+                                                           "y":  90
+                                                       },
+                     "facing=south,on=true,part=bottom":  {
+                                                              "model":  "cobblemon_workforce:block/power_generator_farmer_on",
+                                                              "y":  180
+                                                          },
+                     "facing=east,on=true,part=bottom":  {
+                                                             "model":  "cobblemon_workforce:block/power_generator_farmer_on",
+                                                             "y":  90
+                                                         },
+                     "facing=west,on=true,part=top":  {
+                                                          "model":  "cobblemon_workforce:block/power_generator_on_top",
+                                                          "y":  270
+                                                      },
+                     "facing=west,on=false,part=bottom":  {
+                                                              "model":  "cobblemon_workforce:block/power_generator_farmer",
+                                                              "y":  270
+                                                          }
+                 }
 }

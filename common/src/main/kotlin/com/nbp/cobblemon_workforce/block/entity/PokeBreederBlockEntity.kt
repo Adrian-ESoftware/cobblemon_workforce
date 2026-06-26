@@ -357,6 +357,10 @@ class PokeBreederBlockEntity(pos: BlockPos, state: BlockState) :
         fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: PokeBreederBlockEntity) {
             if (level is ServerLevel) {
                 blockEntity.tickBreeder(level)
+                val hasPokemon = blockEntity.storedPokemon?.let { com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus.isAwake(level, it.pcId, it.pokemonId) } == true
+                if (state.getValue(com.nbp.cobblemon_workforce.block.PokeGeneratorBlock.ON) != hasPokemon) {
+                    level.setBlock(pos, state.setValue(com.nbp.cobblemon_workforce.block.PokeGeneratorBlock.ON, hasPokemon), 3)
+                }
             }
         }
 

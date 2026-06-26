@@ -9,7 +9,16 @@
           "name": "cobblemon_workforce:poke_farm"
         }
       ],
-      "rolls": 1.0
+      "rolls": 1.0,
+      "conditions": [
+        {
+          "condition": "minecraft:block_state_property",
+          "block": "cobblemon_workforce:poke_farm",
+          "properties": {
+            "part": "bottom"
+          }
+        }
+      ]
     }
   ],
   "random_sequence": "cobblemon_workforce:blocks/poke_farm"

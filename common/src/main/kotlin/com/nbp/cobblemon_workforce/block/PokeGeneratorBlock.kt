@@ -40,7 +40,8 @@ import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.world.level.block.state.properties.EnumProperty
 import net.minecraft.util.StringRepresentable
-import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
+import net.minecraft.world.level.storage.loot.LootParams
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams
 
 open class PokeGeneratorBlock(properties: Properties) : BaseEntityBlock(properties) {
     companion object {
@@ -48,12 +49,66 @@ open class PokeGeneratorBlock(properties: Properties) : BaseEntityBlock(properti
         val ON: BooleanProperty = BooleanProperty.create("on")
         val PART: EnumProperty<GeneratorPart> = EnumProperty.create("part", GeneratorPart::class.java)
 
+        private data class ShapeBox(
+            val x1: Double,
+            val y1: Double,
+            val z1: Double,
+            val x2: Double,
+            val y2: Double,
+            val z2: Double
+        )
+
+        private val GENERATOR_COLLIDER = listOf(
+            ShapeBox(0.125, 1.0, 0.1875, 0.875, 1.1875, 0.75),
+            ShapeBox(0.1875, 1.1875, 0.25, 0.8125, 1.6875, 0.75),
+            ShapeBox(0.8125, 1.1875, 0.1875, 0.875, 1.6875, 0.75),
+            ShapeBox(0.125, 1.6875, 0.1875, 0.875, 1.75, 0.75),
+            ShapeBox(0.125, 1.1875, 0.1875, 0.1875, 1.6875, 0.75),
+            ShapeBox(0.6875, 0.125, 0.375, 0.75, 1.0, 0.625),
+            ShapeBox(0.1875, 1.125, 0.771875, 0.8125, 1.6875, 0.771875),
+            ShapeBox(0.125, 0.0, 0.0, 0.875, 0.125, 0.125),
+            ShapeBox(0.0, 0.0, 0.125, 0.125, 0.125, 0.875),
+            ShapeBox(0.875, 0.0, 0.125, 1.0, 0.125, 0.875),
+            ShapeBox(0.125, 0.0, 0.125, 0.875, 0.125, 1.0),
+            ShapeBox(0.25, 0.125, 0.375, 0.3125, 1.0, 0.625),
+            ShapeBox(0.9375, 0.125, 0.375, 1.0, 0.3125, 0.625),
+            ShapeBox(0.0, 0.125, 0.375, 0.0625, 0.3125, 0.625),
+            ShapeBox(0.875, 0.125, 0.4375, 0.9375, 0.25, 0.5625),
+            ShapeBox(0.0625, 0.125, 0.4375, 0.125, 0.25, 0.5625)
+        )
+
+        private val DEFAULT_COLLIDER = listOf(
+            ShapeBox(0.125, 1.0, 0.1875, 0.875, 1.1875, 0.75),
+            ShapeBox(0.1875, 1.1875, 0.25, 0.8125, 1.6875, 0.75),
+            ShapeBox(0.8125, 1.1875, 0.1875, 0.875, 1.6875, 0.75),
+            ShapeBox(0.125, 1.6875, 0.1875, 0.875, 1.75, 0.75),
+            ShapeBox(0.125, 1.1875, 0.1875, 0.1875, 1.6875, 0.75),
+            ShapeBox(0.6875, 0.125, 0.375, 0.75, 1.0, 0.625),
+            ShapeBox(0.1875, 1.125, 0.771875, 0.8125, 1.6875, 0.771875),
+            ShapeBox(0.125, 0.0, 0.0, 0.875, 0.125, 0.125),
+            ShapeBox(0.0, 0.0, 0.125, 0.125, 0.125, 0.875),
+            ShapeBox(0.875, 0.0, 0.125, 1.0, 0.125, 0.875),
+            ShapeBox(0.125, 0.0, 0.125, 0.875, 0.125, 1.0),
+            ShapeBox(0.25, 0.125, 0.375, 0.3125, 1.0, 0.625)
+        )
+
         private val SHAPES: Map<Pair<GeneratorPart, Direction>, VoxelShape> = run {
             val map = mutableMapOf<Pair<GeneratorPart, Direction>, VoxelShape>()
             val horizontals = arrayOf(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST)
             for (part in GeneratorPart.values()) {
                 for (direction in horizontals) {
-                    map[part to direction] = buildCollider(part == GeneratorPart.TOP, direction)
+                    map[part to direction] = buildCollider(GENERATOR_COLLIDER, part == GeneratorPart.TOP, direction)
+                }
+            }
+            map
+        }
+
+        val DEFAULT_SHAPES: Map<Pair<GeneratorPart, Direction>, VoxelShape> = run {
+            val map = mutableMapOf<Pair<GeneratorPart, Direction>, VoxelShape>()
+            val horizontals = arrayOf(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST)
+            for (part in GeneratorPart.values()) {
+                for (direction in horizontals) {
+                    map[part to direction] = buildCollider(DEFAULT_COLLIDER, part == GeneratorPart.TOP, direction)
                 }
             }
             map
@@ -72,47 +127,19 @@ open class PokeGeneratorBlock(properties: Properties) : BaseEntityBlock(properti
             }
         }
 
-        private fun buildCollider(top: Boolean, direction: Direction): VoxelShape {
-            if (top) {
-                return Shapes.or(
-                    voxelShape(0.1875, 0.0, 0.0625, 0.8125, 0.0625, 0.3125, direction),
-                    voxelShape(0.125, 0.0, 0.375, 0.875, 0.1875, 0.9375, direction),
-                    voxelShape(0.1875, 0.1875, 0.4375, 0.8125, 0.6875, 0.9375, direction),
-                    voxelShape(0.8125, 0.1875, 0.375, 0.875, 0.6875, 0.9375, direction),
-                    voxelShape(0.125, 0.1875, 0.375, 0.1875, 0.6875, 0.9375, direction),
-                    voxelShape(0.125, 0.6875, 0.375, 0.875, 0.75, 0.9375, direction)
-                )
-            } else {
-                return Shapes.or(
-                    voxelShape(0.875, 0.0, 0.0, 1.0, 1.0, 0.125, direction),
-                    voxelShape(0.125, 0.0, 0.0, 0.875, 0.125, 0.125, direction),
-                    voxelShape(0.125, 0.875, 0.0, 0.875, 1.0, 0.125, direction),
-                    voxelShape(0.125, 0.125, 0.0625, 0.875, 0.875, 0.125, direction),
-                    voxelShape(0.0625, 0.125, 0.125, 0.125, 0.875, 0.875, direction),
-                    voxelShape(0.0, 0.0, 0.0, 0.125, 1.0, 0.125, direction),
-                    voxelShape(0.125, 0.0, 0.125, 0.875, 0.125, 1.0, direction),
-                    voxelShape(0.875, 0.125, 0.125, 0.9375, 0.875, 0.875, direction),
-                    voxelShape(0.125, 0.875, 0.125, 0.875, 1.0, 1.0, direction),
-                    voxelShape(0.875, 0.0, 0.875, 1.0, 1.0, 1.0, direction),
-                    voxelShape(0.875, 0.0, 0.125, 1.0, 0.125, 0.875, direction),
-                    voxelShape(0.875, 0.875, 0.125, 1.0, 1.0, 0.875, direction),
-                    voxelShape(0.0, 0.875, 0.125, 0.125, 1.0, 0.875, direction),
-                    voxelShape(0.0, 0.0, 0.125, 0.125, 0.125, 0.875, direction),
-                    voxelShape(0.0, 0.0, 0.875, 0.125, 1.0, 1.0, direction),
-                    voxelShape(0.0, 0.125, 0.375, 0.0625, 0.875, 0.625, direction),
-                    voxelShape(0.9375, 0.125, 0.375, 1.0, 0.875, 0.625, direction),
-                    voxelShape(0.1875, 0.1875, 0.05625, 0.8125, 0.75, 0.05625, direction),
-                    voxelShape(0.1875, 0.125, 0.3125, 0.8125, 0.3125, 0.875, direction),
-                    voxelShape(0.1875, 0.125, 0.3125, 0.8125, 0.3125, 0.875, direction),
-                    voxelShape(0.1875, 0.0625, 0.875, 0.8125, 0.25, 0.875, direction),
-                    voxelShape(0.1875, 0.25, 0.25, 0.1875, 0.4375, 0.875, direction),
-                    voxelShape(0.8125, 0.25, 0.25, 0.8125, 0.4375, 0.875, direction),
-                    voxelShape(0.1875, 0.3125, 0.3125, 0.8125, 0.5, 0.3125, direction),
-                    voxelShape(0.25, 0.75, 0.3125, 0.75, 1.0, 0.8125, direction),
-                    voxelShape(0.0, 0.0, 0.0, 0.0625, 1.0, 1.0, direction),
-                    voxelShape(0.9375, 0.0, 0.0, 1.0, 1.0, 1.0, direction)
-                )
+        private fun buildCollider(boxes: List<ShapeBox>, top: Boolean, direction: Direction): VoxelShape {
+            var shape = Shapes.empty()
+            for (box in boxes) {
+                val minY = if (top) maxOf(box.y1, 1.0) - 1.0 else box.y1
+                val maxY = if (top) box.y2 - 1.0 else minOf(box.y2, 1.0)
+                if (maxY > minY) {
+                    shape = Shapes.or(
+                        shape,
+                        voxelShape(box.x1, minY, box.z1, box.x2, maxY, box.z2, direction)
+                    )
+                }
             }
+            return shape
         }
     }
 
@@ -131,7 +158,8 @@ open class PokeGeneratorBlock(properties: Properties) : BaseEntityBlock(properti
     ): VoxelShape {
         val part = state.getValue(PART)
         val facing = state.getValue(HorizontalDirectionalBlock.FACING)
-        return SHAPES[part to facing] ?: Shapes.block()
+        val shapesMap = if (this.javaClass == PokeGeneratorBlock::class.java) SHAPES else DEFAULT_SHAPES
+        return shapesMap[part to facing] ?: Shapes.block()
     }
 
     init {
@@ -195,7 +223,11 @@ open class PokeGeneratorBlock(properties: Properties) : BaseEntityBlock(properti
                 val below = pos.below()
                 val belowState = level.getBlockState(below)
                 if (belowState.`is`(this) && belowState.getValue(PART) == GeneratorPart.BOTTOM) {
-                    level.destroyBlock(below, !player.isCreative)
+                    if (player.isCreative) {
+                        level.setBlock(below, Blocks.AIR.defaultBlockState(), 35)
+                    } else {
+                        level.destroyBlock(below, true)
+                    }
                 }
             } else {
                 val above = pos.above()
@@ -248,24 +280,18 @@ open class PokeGeneratorBlock(properties: Properties) : BaseEntityBlock(properti
         return if (state.getValue(PART) == GeneratorPart.BOTTOM) PokeGeneratorBlockEntity(pos, state) else null
     }
 
-    override fun playerDestroy(
-        level: Level,
-        player: Player,
-        pos: BlockPos,
-        state: BlockState,
-        blockEntity: BlockEntity?,
-        tool: ItemStack
-    ) {
-        player.awardStat(Stats.BLOCK_MINED.get(this))
-        player.causeFoodExhaustion(0.005F)
-
-        if (level is ServerLevel && !player.isCreative && level.gameRules.getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
-            if (state.getValue(PART) == GeneratorPart.BOTTOM) {
-                val stack = (blockEntity as? PokeGeneratorBlockEntity)?.toDroppedStack() ?: ItemStack(this)
-                popResource(level, pos, stack)
-                state.spawnAfterBreak(level, pos, tool, true)
-            }
+    override fun getDrops(state: BlockState, builder: LootParams.Builder): List<ItemStack> {
+        val part = state.getValue(PART)
+        if (part != GeneratorPart.BOTTOM) {
+            return emptyList()
         }
+        val blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY)
+        val stack = if (blockEntity is PokeGeneratorBlockEntity) {
+            blockEntity.toDroppedStack()
+        } else {
+            ItemStack(this)
+        }
+        return listOf(stack)
     }
 
     override fun <T : BlockEntity> getTicker(level: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? {

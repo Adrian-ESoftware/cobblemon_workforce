@@ -32,7 +32,8 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.Shapes
-import net.minecraft.world.phys.shapes.VoxelShape
+import net.minecraft.world.level.storage.loot.LootParams
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams
 
 class PokeCrusherBlock(properties: Properties) : PokeGeneratorBlock(properties) {
     companion object {
@@ -41,21 +42,7 @@ class PokeCrusherBlock(properties: Properties) : PokeGeneratorBlock(properties) 
 
     override fun codec(): MapCodec<out BaseEntityBlock> = CODEC
 
-    override fun getShape(
-        state: BlockState,
-        level: BlockGetter,
-        pos: BlockPos,
-        context: CollisionContext
-    ): VoxelShape {
-        return Shapes.block()
-    }
 
-    override fun getStateForPlacement(context: BlockPlaceContext): BlockState {
-        return defaultBlockState()
-            .setValue(HorizontalDirectionalBlock.FACING, context.horizontalDirection.opposite)
-            .setValue(ON, false)
-            .setValue(PART, GeneratorPart.BOTTOM)
-    }
 
     override fun useItemOn(
         stack: ItemStack,
@@ -84,25 +71,29 @@ class PokeCrusherBlock(properties: Properties) : PokeGeneratorBlock(properties) 
     }
 
     override fun setPlacedBy(level: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, stack: ItemStack) {
+        super.setPlacedBy(level, pos, state, placer, stack)
         if (!level.isClientSide) {
             val crusher = level.getBlockEntity(pos) as? PokeCrusherBlockEntity ?: return
             stack.get(DataComponents.BLOCK_ENTITY_DATA)?.let { crusher.loadUpgradeData(it.copyTag()) }
         }
     }
 
-    override fun updateShape(
-        state: BlockState,
-        direction: Direction,
-        neighborState: BlockState,
-        world: LevelAccessor,
-        pos: BlockPos,
-        neighborPos: BlockPos
-    ): BlockState {
-        return state
-    }
-
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return if (state.getValue(PART) == GeneratorPart.BOTTOM) PokeCrusherBlockEntity(pos, state) else null
+    }
+
+    override fun getDrops(state: BlockState, builder: LootParams.Builder): List<ItemStack> {
+        val part = state.getValue(PART)
+        if (part != GeneratorPart.BOTTOM) {
+            return emptyList()
+        }
+        val blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY)
+        val stack = if (blockEntity is PokeCrusherBlockEntity) {
+            blockEntity.toDroppedStack()
+        } else {
+            ItemStack(this)
+        }
+        return listOf(stack)
     }
 
     override fun playerDestroy(
@@ -113,14 +104,10 @@ class PokeCrusherBlock(properties: Properties) : PokeGeneratorBlock(properties) 
         blockEntity: BlockEntity?,
         tool: ItemStack
     ) {
-        player.awardStat(Stats.BLOCK_MINED.get(this))
-        player.causeFoodExhaustion(0.005F)
+        super.playerDestroy(level, player, pos, state, blockEntity, tool)
         if (level is ServerLevel && !player.isCreative && level.gameRules.getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
             if (state.getValue(PART) == GeneratorPart.BOTTOM) {
                 (blockEntity as? PokeCrusherBlockEntity)?.dropStoredItems(level, pos)
-                val stack = (blockEntity as? PokeCrusherBlockEntity)?.toDroppedStack() ?: ItemStack(this)
-                popResource(level, pos, stack)
-                state.spawnAfterBreak(level, pos, tool, true)
             }
         }
     }

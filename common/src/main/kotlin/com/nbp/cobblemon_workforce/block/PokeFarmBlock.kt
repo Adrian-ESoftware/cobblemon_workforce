@@ -28,9 +28,8 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.shapes.CollisionContext
-import net.minecraft.world.phys.shapes.Shapes
-import net.minecraft.world.phys.shapes.VoxelShape
+import net.minecraft.world.level.storage.loot.LootParams
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams
 
 class PokeFarmBlock(properties: Properties) : PokeGeneratorBlock(properties) {
     companion object {
@@ -39,14 +38,7 @@ class PokeFarmBlock(properties: Properties) : PokeGeneratorBlock(properties) {
 
     override fun codec(): MapCodec<out BaseEntityBlock> = CODEC
 
-    override fun getShape(
-        state: BlockState,
-        level: BlockGetter,
-        pos: BlockPos,
-        context: CollisionContext
-    ): VoxelShape {
-        return Shapes.block()
-    }
+
 
     override fun getStateForPlacement(context: BlockPlaceContext): BlockState {
         return super.getStateForPlacement(context) ?: defaultBlockState()
@@ -100,24 +92,18 @@ class PokeFarmBlock(properties: Properties) : PokeGeneratorBlock(properties) {
         return if (state.getValue(PART) == GeneratorPart.BOTTOM) PokeFarmBlockEntity(pos, state) else null
     }
 
-    override fun playerDestroy(
-        level: Level,
-        player: Player,
-        pos: BlockPos,
-        state: BlockState,
-        blockEntity: BlockEntity?,
-        tool: ItemStack
-    ) {
-        player.awardStat(Stats.BLOCK_MINED.get(this))
-        player.causeFoodExhaustion(0.005F)
-
-        if (level is ServerLevel && !player.isCreative && level.gameRules.getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
-            if (state.getValue(PART) == GeneratorPart.BOTTOM) {
-                val stack = (blockEntity as? PokeFarmBlockEntity)?.toDroppedStack() ?: ItemStack(this)
-                popResource(level, pos, stack)
-                state.spawnAfterBreak(level, pos, tool, true)
-            }
+    override fun getDrops(state: BlockState, builder: LootParams.Builder): List<ItemStack> {
+        val part = state.getValue(PART)
+        if (part != GeneratorPart.BOTTOM) {
+            return emptyList()
         }
+        val blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY)
+        val stack = if (blockEntity is PokeFarmBlockEntity) {
+            blockEntity.toDroppedStack()
+        } else {
+            ItemStack(this)
+        }
+        return listOf(stack)
     }
 
     override fun <T : BlockEntity> getTicker(level: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? {

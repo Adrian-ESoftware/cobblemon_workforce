@@ -121,3 +121,6 @@ run/
 neoforge/bin
 fabric/bin
 common/bin
+
+# Local test resources
+Testes/

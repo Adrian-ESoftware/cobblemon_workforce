@@ -578,6 +578,10 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
         fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: PokeMinerBlockEntity) {
             if (level is ServerLevel) {
                 blockEntity.tickMiner(level)
+                val hasPokemon = blockEntity.storedPokemon.any { com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus.isAwake(level, it.pcId, it.pokemonId) }
+                if (state.getValue(com.nbp.cobblemon_workforce.block.PokeGeneratorBlock.ON) != hasPokemon) {
+                    level.setBlock(pos, state.setValue(com.nbp.cobblemon_workforce.block.PokeGeneratorBlock.ON, hasPokemon), 3)
+                }
             }
         }
 

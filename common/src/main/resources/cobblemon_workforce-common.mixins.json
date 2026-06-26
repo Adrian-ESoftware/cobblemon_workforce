@@ -3,6 +3,7 @@
   "package": "com.nbp.cobblemon_workforce.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "AbstractFurnaceBlockEntityAccessor",
     "FarmBlockMixin",
     "PasturePokemonHandlerMixin",
     "SetPastureConflictHandlerMixin",

@@ -38,14 +38,10 @@ class PokeVacuumBlock(properties: Properties) : PokeGeneratorBlock(properties) {
         blockEntity: BlockEntity?,
         tool: ItemStack
     ) {
-        player.awardStat(Stats.BLOCK_MINED.get(this))
-        player.causeFoodExhaustion(0.005F)
-
+        super.playerDestroy(level, player, pos, state, blockEntity, tool)
         if (level is ServerLevel && !player.isCreative && level.gameRules.getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
             if (state.getValue(PART) == GeneratorPart.BOTTOM) {
                 (blockEntity as? PokeVacuumBlockEntity)?.dropStoredItems(level, pos)
-                popResource(level, pos, ItemStack(this))
-                state.spawnAfterBreak(level, pos, tool, true)
             }
         }
     }

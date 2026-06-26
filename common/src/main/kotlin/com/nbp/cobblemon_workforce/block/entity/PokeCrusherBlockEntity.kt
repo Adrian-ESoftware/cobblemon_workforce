@@ -534,7 +534,13 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
         private const val WORK_SPEED = 0.55
 
         fun tick(level: Level, pos: BlockPos, state: BlockState, blockEntity: PokeCrusherBlockEntity) {
-            if (level is ServerLevel) blockEntity.tickCrusher(level)
+            if (level is ServerLevel) {
+                blockEntity.tickCrusher(level)
+                val hasPokemon = blockEntity.storedPokemon.any { com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus.isAwake(level, it.pcId, it.pokemonId) }
+                if (state.getValue(com.nbp.cobblemon_workforce.block.PokeGeneratorBlock.ON) != hasPokemon) {
+                    level.setBlock(pos, state.setValue(com.nbp.cobblemon_workforce.block.PokeGeneratorBlock.ON, hasPokemon), 3)
+                }
+            }
         }
 
         private fun crusherPowerFor(pokemon: Pokemon): Int {

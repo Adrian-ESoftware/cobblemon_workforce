@@ -4,7 +4,6 @@ import com.mojang.serialization.MapCodec
 import com.nbp.cobblemon_workforce.block.entity.PokeFurnaceBlockEntity
 import com.nbp.cobblemon_workforce.pasture.PokeFurnacePastureBridge
 import net.minecraft.core.BlockPos
-import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.stats.Stats
@@ -42,16 +41,6 @@ class PokeFurnaceBlock(properties: Properties) : PokeGeneratorBlock(properties) 
         hand: InteractionHand,
         hit: BlockHitResult
     ): ItemInteractionResult {
-        if (stack.isEmpty || level.isClientSide || player !is ServerPlayer) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-        }
-        val basePos = if (state.getValue(PART) == GeneratorPart.TOP) pos.below() else pos
-        val furnace = level.getBlockEntity(basePos) as? PokeFurnaceBlockEntity ?: return ItemInteractionResult.SUCCESS
-        val inserted = furnace.insertInputFromPlayer(stack)
-        if (inserted > 0) {
-            player.sendSystemMessage(Component.literal("Inserted $inserted item(s) into the Poke Furnace."))
-            return ItemInteractionResult.SUCCESS
-        }
         return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
     }
 
@@ -67,9 +56,6 @@ class PokeFurnaceBlock(properties: Properties) : PokeGeneratorBlock(properties) 
         }
         val basePos = if (state.getValue(PART) == GeneratorPart.TOP) pos.below() else pos
         val furnace = level.getBlockEntity(basePos) as? PokeFurnaceBlockEntity ?: return InteractionResult.SUCCESS
-        if (player.isShiftKeyDown && furnace.extractOutputToPlayer(player)) {
-            return InteractionResult.SUCCESS
-        }
         PokeFurnacePastureBridge.open(player, basePos, furnace)
         return InteractionResult.SUCCESS
     }
@@ -82,13 +68,10 @@ class PokeFurnaceBlock(properties: Properties) : PokeGeneratorBlock(properties) 
         blockEntity: BlockEntity?,
         tool: ItemStack
     ) {
-        player.awardStat(Stats.BLOCK_MINED.get(this))
-        player.causeFoodExhaustion(0.005F)
+        super.playerDestroy(level, player, pos, state, blockEntity, tool)
         if (level is ServerLevel && !player.isCreative && level.gameRules.getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
             if (state.getValue(PART) == GeneratorPart.BOTTOM) {
                 (blockEntity as? PokeFurnaceBlockEntity)?.dropInventory(level, pos)
-                popResource(level, pos, ItemStack(this))
-                state.spawnAfterBreak(level, pos, tool, true)
             }
         }
     }

@@ -1,20 +1,64 @@
 {
-  "variants": {
-    "facing=north,on=false,part=bottom": { "model": "cobblemon_workforce:block/crusher_v2" },
-    "facing=south,on=false,part=bottom": { "model": "cobblemon_workforce:block/crusher_v2", "y": 180 },
-    "facing=east,on=false,part=bottom": { "model": "cobblemon_workforce:block/crusher_v2", "y": 90 },
-    "facing=west,on=false,part=bottom": { "model": "cobblemon_workforce:block/crusher_v2", "y": 270 },
-    "facing=north,on=true,part=bottom": { "model": "cobblemon_workforce:block/crusher_v2" },
-    "facing=south,on=true,part=bottom": { "model": "cobblemon_workforce:block/crusher_v2", "y": 180 },
-    "facing=east,on=true,part=bottom": { "model": "cobblemon_workforce:block/crusher_v2", "y": 90 },
-    "facing=west,on=true,part=bottom": { "model": "cobblemon_workforce:block/crusher_v2", "y": 270 },
-    "facing=north,on=false,part=top": { "model": "cobblemon_workforce:block/empty" },
-    "facing=south,on=false,part=top": { "model": "cobblemon_workforce:block/empty" },
-    "facing=east,on=false,part=top": { "model": "cobblemon_workforce:block/empty" },
-    "facing=west,on=false,part=top": { "model": "cobblemon_workforce:block/empty" },
-    "facing=north,on=true,part=top": { "model": "cobblemon_workforce:block/empty" },
-    "facing=south,on=true,part=top": { "model": "cobblemon_workforce:block/empty" },
-    "facing=east,on=true,part=top": { "model": "cobblemon_workforce:block/empty" },
-    "facing=west,on=true,part=top": { "model": "cobblemon_workforce:block/empty" }
-  }
+    "variants":  {
+                     "facing=south,on=false,part=top":  {
+                                                            "model":  "cobblemon_workforce:block/power_generator_top",
+                                                            "y":  180
+                                                        },
+                     "facing=south,on=false,part=bottom":  {
+                                                               "model":  "cobblemon_workforce:block/power_generator_crusher",
+                                                               "y":  180
+                                                           },
+                     "facing=east,on=false,part=bottom":  {
+                                                              "model":  "cobblemon_workforce:block/power_generator_crusher",
+                                                              "y":  90
+                                                          },
+                     "facing=south,on=true,part=top":  {
+                                                           "model":  "cobblemon_workforce:block/power_generator_on_top",
+                                                           "y":  180
+                                                       },
+                     "facing=west,on=false,part=top":  {
+                                                           "model":  "cobblemon_workforce:block/power_generator_top",
+                                                           "y":  270
+                                                       },
+                     "facing=north,on=true,part=bottom":  {
+                                                              "model":  "cobblemon_workforce:block/power_generator_crusher_on"
+                                                          },
+                     "facing=north,on=false,part=top":  {
+                                                            "model":  "cobblemon_workforce:block/power_generator_top"
+                                                        },
+                     "facing=east,on=true,part=top":  {
+                                                          "model":  "cobblemon_workforce:block/power_generator_on_top",
+                                                          "y":  90
+                                                      },
+                     "facing=west,on=true,part=bottom":  {
+                                                             "model":  "cobblemon_workforce:block/power_generator_crusher_on",
+                                                             "y":  270
+                                                         },
+                     "facing=north,on=false,part=bottom":  {
+                                                               "model":  "cobblemon_workforce:block/power_generator_crusher"
+                                                           },
+                     "facing=north,on=true,part=top":  {
+                                                           "model":  "cobblemon_workforce:block/power_generator_on_top"
+                                                       },
+                     "facing=east,on=false,part=top":  {
+                                                           "model":  "cobblemon_workforce:block/power_generator_top",
+                                                           "y":  90
+                                                       },
+                     "facing=south,on=true,part=bottom":  {
+                                                              "model":  "cobblemon_workforce:block/power_generator_crusher_on",
+                                                              "y":  180
+                                                          },
+                     "facing=east,on=true,part=bottom":  {
+                                                             "model":  "cobblemon_workforce:block/power_generator_crusher_on",
+                                                             "y":  90
+                                                         },
+                     "facing=west,on=true,part=top":  {
+                                                          "model":  "cobblemon_workforce:block/power_generator_on_top",
+                                                          "y":  270
+                                                      },
+                     "facing=west,on=false,part=bottom":  {
+                                                              "model":  "cobblemon_workforce:block/power_generator_crusher",
+                                                              "y":  270
+                                                          }
+                 }
 }
