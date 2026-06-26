@@ -1,0 +1,2695 @@
+{
+    "credit":  "Made with Blockbench",
+    "texture_size":  [
+                         64,
+                         64
+                     ],
+    "textures":  {
+                     "crusher_v2":  "cobblemon_workforce:block/crusher_v2",
+                     "particle":  "cobblemon_workforce:block/crusher_v2"
+                 },
+    "elements":  [
+                     {
+                         "from":  [
+                                      0.5,
+                                      0,
+                                      4.5
+                                  ],
+                         "to":  [
+                                    2.5,
+                                    13,
+                                    6.5
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                1.75,
+                                                                9.75,
+                                                                2.25,
+                                                                13
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               2.25,
+                                                               9.75,
+                                                               2.75,
+                                                               13
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                9.5,
+                                                                10.25,
+                                                                10,
+                                                                13.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               10,
+                                                               10.25,
+                                                               10.5,
+                                                               13.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             12.5,
+                                                             10.25,
+                                                             12,
+                                                             9.75
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               13,
+                                                               2.5,
+                                                               12.5,
+                                                               3
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      13.5,
+                                      0,
+                                      4.5
+                                  ],
+                         "to":  [
+                                    15.5,
+                                    13,
+                                    6.5
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                10.5,
+                                                                10.25,
+                                                                11,
+                                                                13.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               2.75,
+                                                               10.75,
+                                                               3.25,
+                                                               14
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                3.25,
+                                                                10.75,
+                                                                3.75,
+                                                                14
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               3.75,
+                                                               10.75,
+                                                               4.25,
+                                                               14
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             13,
+                                                             7,
+                                                             12.5,
+                                                             6.5
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14,
+                                                               5.75,
+                                                               13.5,
+                                                               6.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      0.5,
+                                      0,
+                                      13.5
+                                  ],
+                         "to":  [
+                                    2.5,
+                                    13,
+                                    15.5
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                4.25,
+                                                                10.75,
+                                                                4.75,
+                                                                14
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               4.75,
+                                                               10.75,
+                                                               5.25,
+                                                               14
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                5.25,
+                                                                10.75,
+                                                                5.75,
+                                                                14
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               0,
+                                                               11,
+                                                               0.5,
+                                                               14.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             14,
+                                                             6.75,
+                                                             13.5,
+                                                             6.25
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14,
+                                                               6.75,
+                                                               13.5,
+                                                               7.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      13.5,
+                                      0,
+                                      13.5
+                                  ],
+                         "to":  [
+                                    15.5,
+                                    13,
+                                    15.5
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                0.5,
+                                                                11,
+                                                                1,
+                                                                14.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               1,
+                                                               11,
+                                                               1.5,
+                                                               14.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                11,
+                                                                10.25,
+                                                                11.5,
+                                                                13.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               11.5,
+                                                               7.25,
+                                                               12,
+                                                               10.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             10,
+                                                             14,
+                                                             9.5,
+                                                             13.5
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14,
+                                                               9.75,
+                                                               13.5,
+                                                               10.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      0.8,
+                                      2,
+                                      6.5
+                                  ],
+                         "to":  [
+                                    15.2,
+                                    13,
+                                    13.5
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                0,
+                                                                0,
+                                                                3.5,
+                                                                2.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               6,
+                                                               9,
+                                                               7.75,
+                                                               11.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                0,
+                                                                2.75,
+                                                                3.5,
+                                                                5.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               7.75,
+                                                               9,
+                                                               9.5,
+                                                               11.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             9,
+                                                             7.25,
+                                                             5.5,
+                                                             5.5
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               9.75,
+                                                               0,
+                                                               6.25,
+                                                               1.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      2.5,
+                                      3.4,
+                                      4.7
+                                  ],
+                         "to":  [
+                                    13.5,
+                                    13,
+                                    6.5
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                0,
+                                                                5.5,
+                                                                2.75,
+                                                                7.9
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               8.8,
+                                                               11.75,
+                                                               9.25,
+                                                               14.15
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                2.75,
+                                                                5.5,
+                                                                5.5,
+                                                                7.9
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               11.5,
+                                                               12,
+                                                               11.95,
+                                                               14.4
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             14.75,
+                                                             7.75,
+                                                             12,
+                                                             7.3
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14.75,
+                                                               7.8,
+                                                               12,
+                                                               8.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      2.5,
+                                      2,
+                                      13.5
+                                  ],
+                         "to":  [
+                                    13.5,
+                                    13,
+                                    15.2
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                3.5,
+                                                                0,
+                                                                6.25,
+                                                                2.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               7.75,
+                                                               11.75,
+                                                               8.25,
+                                                               14.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                3.5,
+                                                                2.75,
+                                                                6.25,
+                                                                5.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               8.25,
+                                                               11.75,
+                                                               8.75,
+                                                               14.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             14.75,
+                                                             8.75,
+                                                             12,
+                                                             8.25
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14.75,
+                                                               8.75,
+                                                               12,
+                                                               9.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      2.5,
+                                      2,
+                                      3.65
+                                  ],
+                         "to":  [
+                                    13.5,
+                                    3,
+                                    6.5
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                12.5,
+                                                                0,
+                                                                15.25,
+                                                                0.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               12.5,
+                                                               3,
+                                                               13.25,
+                                                               3.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                12.5,
+                                                                0.25,
+                                                                15.25,
+                                                                0.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               10,
+                                                               13.5,
+                                                               10.75,
+                                                               13.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             9,
+                                                             5.5,
+                                                             6.25,
+                                                             4.75
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               12.5,
+                                                               2.5,
+                                                               9.75,
+                                                               3.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      1,
+                                      3.1,
+                                      2.5
+                                  ],
+                         "to":  [
+                                    15,
+                                    9,
+                                    3.5
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         8,
+                                                         3,
+                                                         2.5
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                6.25,
+                                                                1.75,
+                                                                9.75,
+                                                                3.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               1.5,
+                                                               11,
+                                                               1.75,
+                                                               12.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                6.25,
+                                                                3.25,
+                                                                9.75,
+                                                                4.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               9.25,
+                                                               11.75,
+                                                               9.5,
+                                                               13.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             15.5,
+                                                             9.5,
+                                                             12,
+                                                             9.25
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               15.5,
+                                                               9.5,
+                                                               12,
+                                                               9.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      1.2,
+                                      3.5,
+                                      3.5
+                                  ],
+                         "to":  [
+                                    2.2,
+                                    9.35,
+                                    7.3
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         0.2,
+                                                         3,
+                                                         3.5
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                2.5,
+                                                                13,
+                                                                2.75,
+                                                                14.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               11.5,
+                                                               0,
+                                                               12.5,
+                                                               1.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                9.25,
+                                                                13.25,
+                                                                9.5,
+                                                                14.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               11.5,
+                                                               10.5,
+                                                               12.5,
+                                                               12
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             3,
+                                                             10.75,
+                                                             2.75,
+                                                             9.75
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               6,
+                                                               10.75,
+                                                               5.75,
+                                                               11.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      13.9,
+                                      3.5,
+                                      3.5
+                                  ],
+                         "to":  [
+                                    14.9,
+                                    9.35,
+                                    7.3
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         15.9,
+                                                         3,
+                                                         3.5
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                12.5,
+                                                                13.25,
+                                                                12.75,
+                                                                14.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               5.75,
+                                                               11.75,
+                                                               6.75,
+                                                               13.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                12.75,
+                                                                13.25,
+                                                                13,
+                                                                14.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               6.75,
+                                                               11.75,
+                                                               7.75,
+                                                               13.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             11.5,
+                                                             10,
+                                                             11.25,
+                                                             9
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               13,
+                                                               3.75,
+                                                               12.75,
+                                                               4.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      1,
+                                      2,
+                                      2.5
+                                  ],
+                         "to":  [
+                                    15,
+                                    3.5,
+                                    6.1
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         0,
+                                                         3,
+                                                         3.5
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                9,
+                                                                6.75,
+                                                                12.5,
+                                                                7.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               5.75,
+                                                               13.25,
+                                                               6.75,
+                                                               13.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                9.75,
+                                                                3.25,
+                                                                13.25,
+                                                                3.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               6.75,
+                                                               13.25,
+                                                               7.75,
+                                                               13.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             12.5,
+                                                             5.75,
+                                                             9,
+                                                             4.75
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               12.5,
+                                                               5.75,
+                                                               9,
+                                                               6.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      12.1,
+                                      11,
+                                      6.5
+                                  ],
+                         "to":  [
+                                    13.9,
+                                    16,
+                                    13.5
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                13,
+                                                                9.75,
+                                                                13.5,
+                                                                11
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               9.5,
+                                                               9,
+                                                               11.25,
+                                                               10.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                13,
+                                                                11,
+                                                                13.5,
+                                                                12.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               0,
+                                                               9.75,
+                                                               1.75,
+                                                               11
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             12.5,
+                                                             13.75,
+                                                             12,
+                                                             12
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               13,
+                                                               4.75,
+                                                               12.5,
+                                                               6.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      2.1,
+                                      11,
+                                      6.5
+                                  ],
+                         "to":  [
+                                    3.9,
+                                    16,
+                                    13.5
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                13,
+                                                                12.25,
+                                                                13.5,
+                                                                13.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               9.75,
+                                                               0,
+                                                               11.5,
+                                                               1.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                13.25,
+                                                                2.5,
+                                                                13.75,
+                                                                3.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               9.75,
+                                                               1.25,
+                                                               11.5,
+                                                               2.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             13,
+                                                             11.5,
+                                                             12.5,
+                                                             9.75
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               13,
+                                                               11.5,
+                                                               12.5,
+                                                               13.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      2,
+                                      9,
+                                      6.5
+                                  ],
+                         "to":  [
+                                    14,
+                                    16,
+                                    8.5
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         2,
+                                                         11,
+                                                         6.5
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                5.5,
+                                                                7.25,
+                                                                8.5,
+                                                                9
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               1.5,
+                                                               13,
+                                                               2,
+                                                               14.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                0,
+                                                                8,
+                                                                3,
+                                                                9.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               2,
+                                                               13,
+                                                               2.5,
+                                                               14.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             12.75,
+                                                             4.25,
+                                                             9.75,
+                                                             3.75
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               12.75,
+                                                               4.25,
+                                                               9.75,
+                                                               4.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      2,
+                                      9.75,
+                                      11.75
+                                  ],
+                         "to":  [
+                                    14,
+                                    16.75,
+                                    13.75
+                                ],
+                         "rotation":  {
+                                          "angle":  22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         2,
+                                                         11.75,
+                                                         11.75
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                8.5,
+                                                                7.25,
+                                                                11.5,
+                                                                9
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               13,
+                                                               3.75,
+                                                               13.5,
+                                                               5.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                3,
+                                                                9,
+                                                                6,
+                                                                10.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               13,
+                                                               5.5,
+                                                               13.5,
+                                                               7.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             14.5,
+                                                             2,
+                                                             11.5,
+                                                             1.5
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14.5,
+                                                               2,
+                                                               11.5,
+                                                               2.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      10.75,
+                                      15.45,
+                                      7.3
+                                  ],
+                         "to":  [
+                                    11.75,
+                                    15.85,
+                                    8.1
+                                ],
+                         "rotation":  {
+                                          "angle":  22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         9.75,
+                                                         14.45,
+                                                         7.2
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                11.25,
+                                                                10,
+                                                                11.5,
+                                                                10.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               12,
+                                                               10.25,
+                                                               12.25,
+                                                               10.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                12.25,
+                                                                10.25,
+                                                                12.5,
+                                                                10.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               1.5,
+                                                               12.5,
+                                                               1.75,
+                                                               12.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             12.75,
+                                                             7.25,
+                                                             12.5,
+                                                             7
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               1.75,
+                                                               12.75,
+                                                               1.5,
+                                                               13
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      6.75,
+                                      15.45,
+                                      7.3
+                                  ],
+                         "to":  [
+                                    7.75,
+                                    15.85,
+                                    8.1
+                                ],
+                         "rotation":  {
+                                          "angle":  22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         5.75,
+                                                         14.45,
+                                                         7.2
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                12.75,
+                                                                7,
+                                                                13,
+                                                                7.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               13,
+                                                               2.5,
+                                                               13.25,
+                                                               2.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                13,
+                                                                2.75,
+                                                                13.25,
+                                                                3
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               13.5,
+                                                               10.25,
+                                                               13.75,
+                                                               10.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             13.75,
+                                                             10.75,
+                                                             13.5,
+                                                             10.5
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               11,
+                                                               13.5,
+                                                               10.75,
+                                                               13.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      3,
+                                      15,
+                                      6.9
+                                  ],
+                         "to":  [
+                                    13,
+                                    16,
+                                    7.9
+                                ],
+                         "rotation":  {
+                                          "angle":  22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         4,
+                                                         14,
+                                                         5.9
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                3,
+                                                                8,
+                                                                5.5,
+                                                                8.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               13.5,
+                                                               10.75,
+                                                               13.75,
+                                                               11
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                3,
+                                                                8.25,
+                                                                5.5,
+                                                                8.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               11,
+                                                               13.5,
+                                                               11.25,
+                                                               13.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             5.5,
+                                                             8.75,
+                                                             3,
+                                                             8.5
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               5.5,
+                                                               8.75,
+                                                               3,
+                                                               9
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      8.9,
+                                      15.05,
+                                      7.5
+                                  ],
+                         "to":  [
+                                    9.9,
+                                    15.75,
+                                    7.9
+                                ],
+                         "rotation":  {
+                                          "angle":  22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         7.9,
+                                                         15.85,
+                                                         6.5
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                13.5,
+                                                                11,
+                                                                13.75,
+                                                                11.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               11.25,
+                                                               13.5,
+                                                               11.5,
+                                                               13.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                13.5,
+                                                                11.25,
+                                                                13.75,
+                                                                11.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               13.5,
+                                                               11.5,
+                                                               13.75,
+                                                               11.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             13.75,
+                                                             12,
+                                                             13.5,
+                                                             11.75
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               13.75,
+                                                               12,
+                                                               13.5,
+                                                               12.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      5.15,
+                                      15.05,
+                                      7.5
+                                  ],
+                         "to":  [
+                                    6.15,
+                                    15.75,
+                                    7.9
+                                ],
+                         "rotation":  {
+                                          "angle":  22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         4.15,
+                                                         15.85,
+                                                         6.5
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                13.5,
+                                                                12.25,
+                                                                13.75,
+                                                                12.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               13.5,
+                                                               12.5,
+                                                               13.75,
+                                                               12.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                13.5,
+                                                                12.75,
+                                                                13.75,
+                                                                13
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               13,
+                                                               13.5,
+                                                               13.25,
+                                                               13.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             13.75,
+                                                             13.25,
+                                                             13.5,
+                                                             13
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               13.5,
+                                                               13.5,
+                                                               13.25,
+                                                               13.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      9,
+                                      15,
+                                      9.15
+                                  ],
+                         "to":  [
+                                    10,
+                                    15.4,
+                                    9.95
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         8,
+                                                         14,
+                                                         9.05
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                13.5,
+                                                                13.25,
+                                                                13.75,
+                                                                13.5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               13.5,
+                                                               13.5,
+                                                               13.75,
+                                                               13.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                13.75,
+                                                                2.5,
+                                                                14,
+                                                                2.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               13.75,
+                                                               2.75,
+                                                               14,
+                                                               3
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             14,
+                                                             3.25,
+                                                             13.75,
+                                                             3
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14,
+                                                               3.25,
+                                                               13.75,
+                                                               3.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      10.75,
+                                      14.2,
+                                      9.55
+                                  ],
+                         "to":  [
+                                    11.75,
+                                    14.8,
+                                    9.95
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         9.75,
+                                                         15,
+                                                         8.55
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                13.75,
+                                                                3.5,
+                                                                14,
+                                                                3.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               5.75,
+                                                               13.75,
+                                                               6,
+                                                               14
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                6,
+                                                                13.75,
+                                                                6.25,
+                                                                14
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               6.25,
+                                                               13.75,
+                                                               6.5,
+                                                               14
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             6.75,
+                                                             14,
+                                                             6.5,
+                                                             13.75
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               7,
+                                                               13.75,
+                                                               6.75,
+                                                               14
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      7,
+                                      14.2,
+                                      9.55
+                                  ],
+                         "to":  [
+                                    8,
+                                    14.8,
+                                    9.95
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         6,
+                                                         15,
+                                                         8.55
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                7,
+                                                                13.75,
+                                                                7.25,
+                                                                14
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               7.25,
+                                                               13.75,
+                                                               7.5,
+                                                               14
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                7.5,
+                                                                13.75,
+                                                                7.75,
+                                                                14
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               10,
+                                                               13.75,
+                                                               10.25,
+                                                               14
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             10.5,
+                                                             14,
+                                                             10.25,
+                                                             13.75
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14,
+                                                               10.25,
+                                                               13.75,
+                                                               10.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      5,
+                                      15,
+                                      9.15
+                                  ],
+                         "to":  [
+                                    6,
+                                    15.4,
+                                    9.95
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         4,
+                                                         14,
+                                                         9.05
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                10.5,
+                                                                13.75,
+                                                                10.75,
+                                                                14
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               13.75,
+                                                               10.5,
+                                                               14,
+                                                               10.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                10.75,
+                                                                13.75,
+                                                                11,
+                                                                14
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               13.75,
+                                                               10.75,
+                                                               14,
+                                                               11
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             11.25,
+                                                             14,
+                                                             11,
+                                                             13.75
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14,
+                                                               11,
+                                                               13.75,
+                                                               11.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      3,
+                                      13.75,
+                                      9.5
+                                  ],
+                         "to":  [
+                                    13,
+                                    14.75,
+                                    10.5
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         4,
+                                                         12.75,
+                                                         8.5
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                12.5,
+                                                                0.5,
+                                                                15,
+                                                                0.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               11.25,
+                                                               13.75,
+                                                               11.5,
+                                                               14
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                12.5,
+                                                                0.75,
+                                                                15,
+                                                                1
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               13.75,
+                                                               11.25,
+                                                               14,
+                                                               11.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             15,
+                                                             1.25,
+                                                             12.5,
+                                                             1
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               15,
+                                                               1.25,
+                                                               12.5,
+                                                               1.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      10.5,
+                                      15.45,
+                                      10.05
+                                  ],
+                         "to":  [
+                                    11.5,
+                                    15.85,
+                                    10.85
+                                ],
+                         "rotation":  {
+                                          "angle":  22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         9.5,
+                                                         14.45,
+                                                         9.95
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                13.75,
+                                                                11.5,
+                                                                14,
+                                                                11.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               13.75,
+                                                               11.75,
+                                                               14,
+                                                               12
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                12,
+                                                                13.75,
+                                                                12.25,
+                                                                14
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               13.75,
+                                                               12,
+                                                               14,
+                                                               12.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             12.5,
+                                                             14,
+                                                             12.25,
+                                                             13.75
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14,
+                                                               12.25,
+                                                               13.75,
+                                                               12.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      6.5,
+                                      15.45,
+                                      10.05
+                                  ],
+                         "to":  [
+                                    7.5,
+                                    15.85,
+                                    10.85
+                                ],
+                         "rotation":  {
+                                          "angle":  22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         5.5,
+                                                         14.45,
+                                                         9.95
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                13.75,
+                                                                12.5,
+                                                                14,
+                                                                12.75
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               13.75,
+                                                               12.75,
+                                                               14,
+                                                               13
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                13,
+                                                                13.75,
+                                                                13.25,
+                                                                14
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               13.75,
+                                                               13,
+                                                               14,
+                                                               13.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             13.5,
+                                                             14,
+                                                             13.25,
+                                                             13.75
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14,
+                                                               13.25,
+                                                               13.75,
+                                                               13.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      3,
+                                      15,
+                                      9.7
+                                  ],
+                         "to":  [
+                                    13,
+                                    16,
+                                    10.7
+                                ],
+                         "rotation":  {
+                                          "angle":  22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         4,
+                                                         14,
+                                                         8.7
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                13.5,
+                                                                3.75,
+                                                                16,
+                                                                4
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               13.5,
+                                                               13.75,
+                                                               13.75,
+                                                               14
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                13.5,
+                                                                4,
+                                                                16,
+                                                                4.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               13.75,
+                                                               13.5,
+                                                               14,
+                                                               13.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             16,
+                                                             4.5,
+                                                             13.5,
+                                                             4.25
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               16,
+                                                               4.5,
+                                                               13.5,
+                                                               4.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      4.9,
+                                      15.15,
+                                      10.25
+                                  ],
+                         "to":  [
+                                    5.9,
+                                    15.85,
+                                    10.65
+                                ],
+                         "rotation":  {
+                                          "angle":  22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         3.9,
+                                                         15.95,
+                                                         9.25
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                13.75,
+                                                                13.75,
+                                                                14,
+                                                                14
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               14,
+                                                               2.5,
+                                                               14.25,
+                                                               2.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                2.75,
+                                                                14,
+                                                                3,
+                                                                14.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               14,
+                                                               2.75,
+                                                               14.25,
+                                                               3
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             3.25,
+                                                             14.25,
+                                                             3,
+                                                             14
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14.25,
+                                                               3,
+                                                               14,
+                                                               3.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      8.65,
+                                      15.15,
+                                      10.25
+                                  ],
+                         "to":  [
+                                    9.65,
+                                    15.85,
+                                    10.65
+                                ],
+                         "rotation":  {
+                                          "angle":  22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         7.65,
+                                                         15.95,
+                                                         9.25
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                3.25,
+                                                                14,
+                                                                3.5,
+                                                                14.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               14,
+                                                               3.25,
+                                                               14.25,
+                                                               3.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                3.5,
+                                                                14,
+                                                                3.75,
+                                                                14.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               14,
+                                                               3.5,
+                                                               14.25,
+                                                               3.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             4,
+                                                             14.25,
+                                                             3.75,
+                                                             14
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               4.25,
+                                                               14,
+                                                               4,
+                                                               14.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      5.25,
+                                      14.95,
+                                      12.05
+                                  ],
+                         "to":  [
+                                    6.25,
+                                    15.35,
+                                    12.85
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         4.25,
+                                                         13.95,
+                                                         11.95
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                4.25,
+                                                                14,
+                                                                4.5,
+                                                                14.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               4.5,
+                                                               14,
+                                                               4.75,
+                                                               14.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                4.75,
+                                                                14,
+                                                                5,
+                                                                14.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               5,
+                                                               14,
+                                                               5.25,
+                                                               14.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             5.5,
+                                                             14.25,
+                                                             5.25,
+                                                             14
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               5.75,
+                                                               14,
+                                                               5.5,
+                                                               14.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      6.65,
+                                      14.05,
+                                      12.25
+                                  ],
+                         "to":  [
+                                    7.65,
+                                    14.75,
+                                    12.65
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         5.65,
+                                                         14.85,
+                                                         11.25
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                5.75,
+                                                                14,
+                                                                6,
+                                                                14.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               14,
+                                                               5.75,
+                                                               14.25,
+                                                               6
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                6,
+                                                                14,
+                                                                6.25,
+                                                                14.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               14,
+                                                               6,
+                                                               14.25,
+                                                               6.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             6.5,
+                                                             14.25,
+                                                             6.25,
+                                                             14
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               14.25,
+                                                               6.25,
+                                                               14,
+                                                               6.5
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      3,
+                                      13.75,
+                                      12.3
+                                  ],
+                         "to":  [
+                                    13,
+                                    14.75,
+                                    13.3
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         4,
+                                                         12.75,
+                                                         11.3
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                13.5,
+                                                                4.75,
+                                                                16,
+                                                                5
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               6.5,
+                                                               14,
+                                                               6.75,
+                                                               14.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                13.5,
+                                                                5,
+                                                                16,
+                                                                5.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               14,
+                                                               6.5,
+                                                               14.25,
+                                                               6.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             16,
+                                                             5.5,
+                                                             13.5,
+                                                             5.25
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               16,
+                                                               5.5,
+                                                               13.5,
+                                                               5.75
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      9.25,
+                                      14.95,
+                                      12.05
+                                  ],
+                         "to":  [
+                                    10.25,
+                                    15.35,
+                                    12.85
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         8.25,
+                                                         13.95,
+                                                         11.95
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                6.75,
+                                                                14,
+                                                                7,
+                                                                14.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               14,
+                                                               6.75,
+                                                               14.25,
+                                                               7
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                7,
+                                                                14,
+                                                                7.25,
+                                                                14.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               14,
+                                                               7,
+                                                               14.25,
+                                                               7.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             7.5,
+                                                             14.25,
+                                                             7.25,
+                                                             14
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               7.75,
+                                                               14,
+                                                               7.5,
+                                                               14.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      10.4,
+                                      14.05,
+                                      12.25
+                                  ],
+                         "to":  [
+                                    11.4,
+                                    14.75,
+                                    12.65
+                                ],
+                         "rotation":  {
+                                          "angle":  -22.5,
+                                          "axis":  "x",
+                                          "origin":  [
+                                                         9.4,
+                                                         14.85,
+                                                         11.25
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                9.5,
+                                                                14,
+                                                                9.75,
+                                                                14.25
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               9.75,
+                                                               14,
+                                                               10,
+                                                               14.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                14,
+                                                                9.75,
+                                                                14.25,
+                                                                10
+                                                            ],
+                                                     "texture":  "#crusher_v2"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               10,
+                                                               14,
+                                                               10.25,
+                                                               14.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             14.25,
+                                                             10.25,
+                                                             14,
+                                                             10
+                                                         ],
+                                                  "texture":  "#crusher_v2"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               10.5,
+                                                               14,
+                                                               10.25,
+                                                               14.25
+                                                           ],
+                                                    "texture":  "#crusher_v2"
+                                                }
+                                   }
+                     }
+                 ]
+}
