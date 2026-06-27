@@ -3,10 +3,6 @@
   "values": [
     "cobblemon_workforce:iron_dust",
     "cobblemon_workforce:copper_dust",
-    "cobblemon_workforce:gold_dust",
-    "cobblemon_workforce:coal_dust",
-    "cobblemon_workforce:lapis_dust",
-    "cobblemon_workforce:diamond_dust",
-    "cobblemon_workforce:emerald_dust"
+    "cobblemon_workforce:gold_dust"
   ]
 }

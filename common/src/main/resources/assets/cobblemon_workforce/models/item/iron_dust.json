@@ -1,1 +1,2 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "cobblemon_workforce:item/slot_upgrade" } }
+{ "parent": "minecraft:item/generated", "textures": { "layer0": "cobblemon_workforce:item/iron_dust" } }
+

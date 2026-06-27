@@ -168,10 +168,6 @@ object ModRegistry {
     val IRON_DUST: RegistrySupplier<Item> = ITEMS.register("iron_dust") { Item(Item.Properties()) }
     val COPPER_DUST: RegistrySupplier<Item> = ITEMS.register("copper_dust") { Item(Item.Properties()) }
     val GOLD_DUST: RegistrySupplier<Item> = ITEMS.register("gold_dust") { Item(Item.Properties()) }
-    val COAL_DUST: RegistrySupplier<Item> = ITEMS.register("coal_dust") { Item(Item.Properties()) }
-    val LAPIS_DUST: RegistrySupplier<Item> = ITEMS.register("lapis_dust") { Item(Item.Properties()) }
-    val DIAMOND_DUST: RegistrySupplier<Item> = ITEMS.register("diamond_dust") { Item(Item.Properties()) }
-    val EMERALD_DUST: RegistrySupplier<Item> = ITEMS.register("emerald_dust") { Item(Item.Properties()) }
 
     val POKE_GENERATOR_BLOCK_ENTITY: RegistrySupplier<BlockEntityType<PokeGeneratorBlockEntity>> = 
         BLOCK_ENTITY_TYPES.register("poke_generator") {
@@ -233,10 +229,6 @@ object ModRegistry {
                 output.accept(IRON_DUST.get())
                 output.accept(COPPER_DUST.get())
                 output.accept(GOLD_DUST.get())
-                output.accept(COAL_DUST.get())
-                output.accept(LAPIS_DUST.get())
-                output.accept(DIAMOND_DUST.get())
-                output.accept(EMERALD_DUST.get())
             }
             .build()
     }

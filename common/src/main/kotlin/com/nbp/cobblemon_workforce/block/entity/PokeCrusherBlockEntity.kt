@@ -577,18 +577,7 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
                 Items.RAW_GOLD to ModRegistry.GOLD_DUST.get(),
                 Items.GOLD_ORE to ModRegistry.GOLD_DUST.get(),
                 Items.DEEPSLATE_GOLD_ORE to ModRegistry.GOLD_DUST.get(),
-                Items.COAL to ModRegistry.COAL_DUST.get(),
-                Items.COAL_ORE to ModRegistry.COAL_DUST.get(),
-                Items.DEEPSLATE_COAL_ORE to ModRegistry.COAL_DUST.get(),
-                Items.LAPIS_LAZULI to ModRegistry.LAPIS_DUST.get(),
-                Items.LAPIS_ORE to ModRegistry.LAPIS_DUST.get(),
-                Items.DEEPSLATE_LAPIS_ORE to ModRegistry.LAPIS_DUST.get(),
-                Items.DIAMOND to ModRegistry.DIAMOND_DUST.get(),
-                Items.DIAMOND_ORE to ModRegistry.DIAMOND_DUST.get(),
-                Items.DEEPSLATE_DIAMOND_ORE to ModRegistry.DIAMOND_DUST.get(),
-                Items.EMERALD to ModRegistry.EMERALD_DUST.get(),
-                Items.EMERALD_ORE to ModRegistry.EMERALD_DUST.get(),
-                Items.DEEPSLATE_EMERALD_ORE to ModRegistry.EMERALD_DUST.get()
+                Items.ANCIENT_DEBRIS to Items.NETHERITE_SCRAP
             )
         }
     }

@@ -247,6 +247,7 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun generateEnergy(world: ServerLevel) {
+        refreshStoredPowerStats(world)
         val activeGenerationRate = storedPokemon
             .filter { PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId) }
             .sumOf { generationRateFor(it.powerStatValue) }
@@ -256,6 +257,31 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
 
         energyStored = (energyStored + activeGenerationRate).coerceAtMost(MAX_ENERGY)
         setChanged()
+    }
+
+    private fun refreshStoredPowerStats(world: ServerLevel) {
+        var changed = false
+        for (index in storedPokemon.indices) {
+            val entry = storedPokemon[index]
+            val pokemon = Cobblemon.storage.getPC(entry.pcId, world.registryAccess())[entry.pokemonId] ?: continue
+            val powerStat = powerStatFor(pokemon)
+            if (entry.pokemonName != pokemon.getDisplayName().string ||
+                entry.powerStatName != powerStat.name ||
+                entry.powerStatValue != powerStat.value
+            ) {
+                storedPokemon[index] = entry.copy(
+                    pokemonName = pokemon.getDisplayName().string,
+                    powerStatName = powerStat.name,
+                    powerStatValue = powerStat.value
+                )
+                changed = true
+            }
+        }
+        if (changed) {
+            recalculateGeneration()
+            PokeGeneratorEnergyOutput.invalidate(this)
+            setChanged()
+        }
     }
 
     private fun ensureVisiblePokemon() {
@@ -469,17 +495,16 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
         }
 
         private fun powerStatFor(pokemon: Pokemon): PowerStat {
-            val attack = calculatedPowerStat(pokemon, Stats.ATTACK, "Attack")
-            val specialAttack = calculatedPowerStat(pokemon, Stats.SPECIAL_ATTACK, "Sp. Attack")
-            return if (specialAttack.value > attack.value) {
-                specialAttack
+            val attackBase = pokemon.form.baseStats[Stats.ATTACK] ?: 0
+            val specialAttackBase = pokemon.form.baseStats[Stats.SPECIAL_ATTACK] ?: 0
+            return if (specialAttackBase > attackBase) {
+                calculatedPowerStat(pokemon, Stats.SPECIAL_ATTACK, "Sp. Attack", specialAttackBase)
             } else {
-                attack
+                calculatedPowerStat(pokemon, Stats.ATTACK, "Attack", attackBase)
             }
         }
 
-        private fun calculatedPowerStat(pokemon: Pokemon, stat: Stat, name: String): PowerStat {
-            val baseStat = pokemon.form.baseStats[stat] ?: 0
+        private fun calculatedPowerStat(pokemon: Pokemon, stat: Stat, name: String, baseStat: Int): PowerStat {
             val iv = pokemon.ivs.getOrDefault(stat)
             val ev = pokemon.evs.getOrDefault(stat)
             val ivBonus = iv * CobblemonWorkforceConfig.ivBonusPercentPerPoint / 100.0
@@ -487,7 +512,7 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
             val levelMultiplier = levelMultiplier(pokemon.level)
             val generatedValue = (baseStat * (1.0 + ivBonus + evBonus) * levelMultiplier).toInt().coerceAtLeast(1)
             return PowerStat(
-                name = "$name Base + IV/EV",
+                name = "$name Base Stat",
                 value = generatedValue
             )
         }
@@ -501,7 +526,7 @@ class PokeGeneratorBlockEntity(pos: BlockPos, state: BlockState) :
         }
 
         private fun generationRateFor(statValue: Int): Int {
-            return (4 + statValue / 4).coerceIn(4, 160)
+            return statValue.coerceIn(1, MAX_ENERGY)
         }
     }
 
