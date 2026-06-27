@@ -32,6 +32,9 @@ dependencies {
 
     modApi "dev.architectury:architectury-fabric:${rootProject.architectury_version}"
 
+    modApi "teamreborn:energy:4.1.0"
+    include "teamreborn:energy:4.1.0"
+
     common(project(path: ":common", configuration: "namedElements")) {
         transitive = false
     }

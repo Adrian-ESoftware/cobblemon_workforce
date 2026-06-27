@@ -1,10 +1,12 @@
 package com.nbp.cobblemon_workforce.block.entity
 
 import com.cobblemon.mod.common.Cobblemon
+import com.cobblemon.mod.common.CobblemonEntities
 import com.cobblemon.mod.common.api.pokemon.stats.Stat
 import com.cobblemon.mod.common.api.pokemon.stats.Stats
 import com.cobblemon.mod.common.api.types.ElementalTypes
 import com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
+import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
@@ -391,7 +393,7 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
 
     private fun ensureVisiblePokemon(world: ServerLevel, entry: StoredPokemon) {
         val pokemon = Cobblemon.storage.getPC(entry.pcId, world.registryAccess())[entry.pokemonId] ?: return
-        var existing = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == entry.linkId }
+        var existing: Entity? = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == entry.linkId }
         if (existing == null) {
             val searchBox = AABB(blockPos).inflate(CobblemonWorkforceConfig.pokemonWanderRange.toDouble() + 10.0)
             val entities = world.getEntitiesOfClass(Entity::class.java, searchBox) { ent ->
@@ -401,7 +403,6 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
             if (entities.isNotEmpty()) {
                 existing = entities.first()
                 for (i in 1 until entities.size) entities[i].discard()
-                runCatching { pokemon.javaClass.getMethod("setEntity", Entity::class.java).invoke(pokemon, existing) }
             }
         }
         if (!CobblemonWorkforceConfig.showPokemonOutside) {
@@ -503,28 +504,25 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
         return !state.isAir && (state.entityCanStandOn(world, pos, entity) || state.entityCanStandOnFace(world, pos, entity, Direction.DOWN))
     }
 
-    private fun createPokemonEntity(world: ServerLevel, pokemon: Pokemon): Entity? {
+    private fun createPokemonEntity(world: ServerLevel, pokemon: Pokemon): PokemonEntity? {
         return runCatching {
-            val entityClass = Class.forName("com.cobblemon.mod.common.entity.pokemon.PokemonEntity")
-            val entityType = Class.forName("com.cobblemon.mod.common.CobblemonEntities").getField("POKEMON").get(null) as EntityType<*>
-            val constructor = entityClass.getConstructor(Level::class.java, Pokemon::class.java, EntityType::class.java)
-            (constructor.newInstance(world, pokemon, entityType) as Entity).also {
-                it.javaClass.getMethod("refreshDimensions").invoke(it)
-            }
+            val entity = PokemonEntity(world, pokemon, CobblemonEntities.POKEMON)
+            entity.refreshDimensions()
+            entity
         }.getOrElse {
             Cobblemon.LOGGER.warn("Could not create visible Poke Crusher Pokemon entity", it)
             null
         }
     }
 
-    private fun getPokemonEntity(pokemon: Pokemon): Entity? = runCatching { pokemon.javaClass.getMethod("getEntity").invoke(pokemon) as? Entity }.getOrNull()
+    private fun getPokemonEntity(pokemon: Pokemon): PokemonEntity? = pokemon.entity
 
     private fun getTethering(entity: Entity): PokemonPastureBlockEntity.Tethering? {
-        return runCatching { entity.javaClass.getMethod("getTethering").invoke(entity) as? PokemonPastureBlockEntity.Tethering }.getOrNull()
+        return (entity as? PokemonEntity)?.tethering
     }
 
     private fun setTethering(entity: Entity, tethering: PokemonPastureBlockEntity.Tethering) {
-        runCatching { entity.javaClass.getMethod("setTethering", PokemonPastureBlockEntity.Tethering::class.java).invoke(entity, tethering) }
+        (entity as? PokemonEntity)?.tethering = tethering
     }
 
     companion object {
