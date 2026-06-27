@@ -1,13 +1,13 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "PBP",
+    "PMP",
     "WSW",
-    "PBP"
+    "PMP"
   ],
   "key": {
     "P": { "item": "minecraft:prismarine_shard" },
-    "B": { "item": "cobblemon:dive_ball" },
+    "M": { "item": "cobblemon:mystic_water" },
     "W": { "item": "minecraft:water_bucket" },
     "S": { "item": "cobblemon_workforce:slot_upgrade" }
   },

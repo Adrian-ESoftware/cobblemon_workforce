@@ -2,13 +2,13 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "SDS",
-    "BPB",
+    "RPR",
     "SDS"
   ],
   "key": {
     "S": { "item": "minecraft:iron_ingot" },
     "D": { "item": "minecraft:diamond" },
-    "B": { "item": "cobblemon:ultra_ball" },
+    "R": { "item": "cobblemon:razor_claw" },
     "P": { "item": "cobblemon_workforce:poke_generator" }
   },
   "result": {

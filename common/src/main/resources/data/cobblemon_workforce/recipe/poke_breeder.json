@@ -1,14 +1,14 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "EGE",
-    "BPB",
-    "EGE"
+    "ELE",
+    "OPO",
+    "ELE"
   ],
   "key": {
     "E": { "item": "minecraft:gold_ingot" },
-    "G": { "item": "minecraft:egg" },
-    "B": { "item": "cobblemon:poke_ball" },
+    "L": { "item": "cobblemon:link_cable" },
+    "O": { "item": "cobblemon:oval_stone" },
     "P": { "item": "cobblemon_workforce:poke_generator" }
   },
   "result": {

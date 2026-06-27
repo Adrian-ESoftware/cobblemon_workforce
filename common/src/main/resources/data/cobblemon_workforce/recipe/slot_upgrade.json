@@ -2,13 +2,14 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "IRI",
-    "RBR",
+    "CEC",
     "IRI"
   ],
   "key": {
     "I": { "item": "minecraft:iron_ingot" },
     "R": { "item": "minecraft:redstone" },
-    "B": { "item": "cobblemon:poke_ball" }
+    "C": { "item": "minecraft:copper_ingot" },
+    "E": { "item": "cobblemon:exp_candy_xs" }
   },
   "result": {
     "id": "cobblemon_workforce:slot_upgrade",

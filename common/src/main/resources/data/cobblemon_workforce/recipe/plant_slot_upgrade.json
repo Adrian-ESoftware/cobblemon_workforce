@@ -1,14 +1,14 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "LBL",
+    "LML",
     "FSF",
-    "LBL"
+    "LML"
   ],
   "key": {
     "L": { "item": "minecraft:oak_leaves" },
-    "B": { "item": "cobblemon:nest_ball" },
-    "F": { "item": "minecraft:bone_meal" },
+    "M": { "item": "cobblemon:miracle_seed" },
+    "F": { "item": "cobblemon:medicinal_leek" },
     "S": { "item": "cobblemon_workforce:slot_upgrade" }
   },
   "result": {

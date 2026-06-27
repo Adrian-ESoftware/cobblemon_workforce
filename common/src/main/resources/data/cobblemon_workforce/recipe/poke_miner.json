@@ -2,13 +2,13 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "AXA",
-    "BPB",
+    "MPM",
     "AXA"
   ],
   "key": {
     "A": { "item": "minecraft:iron_ingot" },
     "X": { "item": "minecraft:iron_pickaxe" },
-    "B": { "item": "cobblemon:great_ball" },
+    "M": { "item": "cobblemon:hard_stone" },
     "P": { "item": "cobblemon_workforce:poke_generator" }
   },
   "result": {

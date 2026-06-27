@@ -2,13 +2,13 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "HTH",
-    "BPB",
+    "VPV",
     "HTH"
   ],
   "key": {
     "H": { "item": "minecraft:hopper" },
     "T": { "item": "minecraft:chest" },
-    "B": { "item": "cobblemon:poke_ball" },
+    "V": { "item": "cobblemon:adrenaline_orb" },
     "P": { "item": "cobblemon_workforce:poke_generator" }
   },
   "result": {

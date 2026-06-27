@@ -1,14 +1,14 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "ICI",
-    "BPB",
-    "ICI"
+    "IEI",
+    "LPL",
+    "IEI"
   ],
   "key": {
     "I": { "item": "minecraft:iron_ingot" },
-    "C": { "item": "minecraft:copper_ingot" },
-    "B": { "item": "cobblemon:poke_ball" },
+    "E": { "item": "cobblemon:exp_share" },
+    "L": { "item": "minecraft:copper_ingot" },
     "P": { "item": "minecraft:piston" }
   },
   "result": {

@@ -1,15 +1,15 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "SDS",
-    "BPB",
+    "SFS",
+    "CPM",
     "SFS"
   ],
   "key": {
     "S": { "item": "minecraft:iron_ingot" },
-    "D": { "item": "minecraft:blast_furnace" },
-    "B": { "item": "cobblemon:great_ball" },
-    "F": { "item": "minecraft:furnace" },
+    "F": { "item": "minecraft:blast_furnace" },
+    "C": { "item": "cobblemon:charcoal_stick" },
+    "M": { "item": "cobblemon:magmarizer" },
     "P": { "item": "cobblemon_workforce:poke_generator" }
   },
   "result": {

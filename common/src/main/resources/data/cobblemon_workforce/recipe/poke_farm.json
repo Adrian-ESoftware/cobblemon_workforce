@@ -2,13 +2,13 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "GHG",
-    "FPF",
+    "RPR",
     "GHG"
   ],
   "key": {
     "G": { "item": "minecraft:gold_ingot" },
-    "H": { "item": "cobblemon:potion" },
-    "F": { "item": "minecraft:furnace" },
+    "H": { "item": "cobblemon:revival_herb" },
+    "R": { "item": "cobblemon:energy_root" },
     "P": { "item": "cobblemon_workforce:poke_generator" }
   },
   "result": {

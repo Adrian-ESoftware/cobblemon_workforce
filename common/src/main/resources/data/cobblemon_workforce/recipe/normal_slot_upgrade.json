@@ -1,15 +1,14 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "GBG",
-    "RSR",
-    "GBG"
+    "GSG",
+    "NSN",
+    "GSG"
   ],
   "key": {
     "G": { "item": "minecraft:gravel" },
-    "B": { "item": "cobblemon:net_ball" },
-    "R": { "item": "minecraft:iron_ingot" },
-    "S": { "item": "cobblemon_workforce:slot_upgrade" }
+    "S": { "item": "cobblemon_workforce:slot_upgrade" },
+    "N": { "item": "cobblemon:hard_stone" }
   },
   "result": {
     "id": "cobblemon_workforce:normal_slot_upgrade",
