@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AXA",
+    "BPB",
+    "AXA"
+  ],
+  "key": {
+    "A": { "item": "minecraft:iron_ingot" },
+    "X": { "item": "minecraft:iron_axe" },
+    "B": { "item": "cobblemon:great_ball" },
+    "P": { "item": "cobblemon_workforce:poke_generator" }
+  },
+  "result": {
+    "id": "cobblemon_workforce:poke_lumber",
+    "count": 1
+  }
+}

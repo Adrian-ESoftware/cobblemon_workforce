@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PBP",
+    "WSW",
+    "PBP"
+  ],
+  "key": {
+    "P": { "item": "minecraft:prismarine_shard" },
+    "B": { "item": "cobblemon:dive_ball" },
+    "W": { "item": "minecraft:water_bucket" },
+    "S": { "item": "cobblemon_workforce:slot_upgrade" }
+  },
+  "result": {
+    "id": "cobblemon_workforce:water_slot_upgrade",
+    "count": 1
+  }
+}

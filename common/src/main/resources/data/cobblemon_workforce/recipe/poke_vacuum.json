@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "HTH",
+    "BPB",
+    "HTH"
+  ],
+  "key": {
+    "H": { "item": "minecraft:hopper" },
+    "T": { "item": "minecraft:chest" },
+    "B": { "item": "cobblemon:poke_ball" },
+    "P": { "item": "cobblemon_workforce:poke_generator" }
+  },
+  "result": {
+    "id": "cobblemon_workforce:poke_vacuum",
+    "count": 1
+  }
+}

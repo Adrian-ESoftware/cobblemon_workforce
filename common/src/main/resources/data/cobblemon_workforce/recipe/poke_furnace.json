@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SDS",
+    "BPB",
+    "SFS"
+  ],
+  "key": {
+    "S": { "item": "minecraft:iron_ingot" },
+    "D": { "item": "minecraft:blast_furnace" },
+    "B": { "item": "cobblemon:great_ball" },
+    "F": { "item": "minecraft:furnace" },
+    "P": { "item": "cobblemon_workforce:poke_generator" }
+  },
+  "result": {
+    "id": "cobblemon_workforce:poke_furnace",
+    "count": 1
+  }
+}

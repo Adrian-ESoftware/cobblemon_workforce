@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "LBL",
+    "FSF",
+    "LBL"
+  ],
+  "key": {
+    "L": { "item": "minecraft:oak_leaves" },
+    "B": { "item": "cobblemon:nest_ball" },
+    "F": { "item": "minecraft:bone_meal" },
+    "S": { "item": "cobblemon_workforce:slot_upgrade" }
+  },
+  "result": {
+    "id": "cobblemon_workforce:plant_slot_upgrade",
+    "count": 1
+  }
+}

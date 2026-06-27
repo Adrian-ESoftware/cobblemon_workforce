@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SDS",
+    "BPB",
+    "SDS"
+  ],
+  "key": {
+    "S": { "item": "minecraft:iron_ingot" },
+    "D": { "item": "minecraft:diamond" },
+    "B": { "item": "cobblemon:ultra_ball" },
+    "P": { "item": "cobblemon_workforce:poke_generator" }
+  },
+  "result": {
+    "id": "cobblemon_workforce:poke_crusher",
+    "count": 1
+  }
+}

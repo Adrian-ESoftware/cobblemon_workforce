@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GHG",
+    "FPF",
+    "GHG"
+  ],
+  "key": {
+    "G": { "item": "minecraft:gold_ingot" },
+    "H": { "item": "cobblemon:potion" },
+    "F": { "item": "minecraft:furnace" },
+    "P": { "item": "cobblemon_workforce:poke_generator" }
+  },
+  "result": {
+    "id": "cobblemon_workforce:poke_farm",
+    "count": 1
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IRI",
+    "RBR",
+    "IRI"
+  ],
+  "key": {
+    "I": { "item": "minecraft:iron_ingot" },
+    "R": { "item": "minecraft:redstone" },
+    "B": { "item": "cobblemon:poke_ball" }
+  },
+  "result": {
+    "id": "cobblemon_workforce:slot_upgrade",
+    "count": 1
+  }
+}

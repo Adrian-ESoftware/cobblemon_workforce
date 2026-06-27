@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "EGE",
+    "BPB",
+    "EGE"
+  ],
+  "key": {
+    "E": { "item": "minecraft:gold_ingot" },
+    "G": { "item": "minecraft:egg" },
+    "B": { "item": "cobblemon:poke_ball" },
+    "P": { "item": "cobblemon_workforce:poke_generator" }
+  },
+  "result": {
+    "id": "cobblemon_workforce:poke_breeder",
+    "count": 1
+  }
+}

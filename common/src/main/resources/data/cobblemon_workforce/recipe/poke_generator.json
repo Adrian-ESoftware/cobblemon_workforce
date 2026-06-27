@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ICI",
+    "BPB",
+    "ICI"
+  ],
+  "key": {
+    "I": { "item": "minecraft:iron_ingot" },
+    "C": { "item": "minecraft:copper_ingot" },
+    "B": { "item": "cobblemon:poke_ball" },
+    "P": { "item": "minecraft:piston" }
+  },
+  "result": {
+    "id": "cobblemon_workforce:poke_generator",
+    "count": 1
+  }
+}
