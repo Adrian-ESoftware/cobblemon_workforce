@@ -2,7 +2,7 @@ package com.nbp.cobblemon_workforce.block
 
 import com.mojang.serialization.MapCodec
 import com.nbp.cobblemon_workforce.block.entity.PokeVacuumBlockEntity
-import com.nbp.cobblemon_workforce.pasture.PokeVacuumPastureBridge
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureBridge
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -25,6 +25,10 @@ class PokeVacuumBlock(properties: Properties) : PokeGeneratorBlock(properties) {
     }
 
     override fun codec(): MapCodec<out BaseEntityBlock> = CODEC
+
+    override fun workTooltipLines(): List<String> = listOf(
+        "1. Psychic/Ghost/Dark: Pulls nearby dropped items into adjacent chests."
+    )
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return if (state.getValue(PART) == GeneratorPart.BOTTOM) PokeVacuumBlockEntity(pos, state) else null
@@ -63,7 +67,7 @@ class PokeVacuumBlock(properties: Properties) : PokeGeneratorBlock(properties) {
 
         val basePos = if (state.getValue(PART) == GeneratorPart.TOP) pos.below() else pos
         val vacuum = level.getBlockEntity(basePos) as? PokeVacuumBlockEntity ?: return InteractionResult.SUCCESS
-        PokeVacuumPastureBridge.open(player, basePos, vacuum)
+        WorkforcePastureBridge.open(player, basePos, vacuum)
         return InteractionResult.SUCCESS
     }
 

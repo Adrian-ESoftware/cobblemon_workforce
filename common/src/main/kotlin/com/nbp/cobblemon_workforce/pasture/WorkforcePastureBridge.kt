@@ -12,7 +12,6 @@ import com.cobblemon.mod.common.net.messages.server.pasture.PasturePokemonPacket
 import com.cobblemon.mod.common.net.messages.server.pasture.SetPastureConflictPacket
 import com.cobblemon.mod.common.net.messages.server.pasture.UnpastureAllPokemonPacket
 import com.cobblemon.mod.common.net.messages.server.pasture.UnpasturePokemonPacket
-import com.nbp.cobblemon_workforce.block.entity.PokeCrusherBlockEntity
 import java.util.UUID
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
@@ -20,36 +19,42 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 
-object PokeCrusherPastureBridge {
-    fun open(player: ServerPlayer, pos: BlockPos, crusher: PokeCrusherBlockEntity) {
+object WorkforcePastureBridge {
+    fun open(player: ServerPlayer, pos: BlockPos, host: WorkforcePastureHost) {
         val pc = Cobblemon.storage.getPC(player)
         val linkId = UUID.randomUUID()
-        val permissions = permissions(crusher)
+        val permissions = permissions(host)
+
         OpenPasturePacket(
             pcId = pc.uuid,
             pastureId = linkId,
-            limit = crusher.slotLimit(),
-            tetheredPokemon = crusher.toPastureDTOs(player),
+            limit = host.slotLimit(),
+            tetheredPokemon = host.toPastureDTOs(player),
             permissions = permissions
         ).sendToPlayer(player)
+
         val dimension = ResourceLocation.tryParse(player.level().dimensionTypeRegistration().registeredName) ?: return
         PastureLinkManager.createLink(player.uuid, PastureLink(linkId, pc.uuid, dimension, pos, permissions))
     }
 
-    private fun syncOpen(player: ServerPlayer, link: PastureLink, crusher: PokeCrusherBlockEntity) {
-        val permissions = permissions(crusher)
+    private fun syncOpen(player: ServerPlayer, link: PastureLink, host: WorkforcePastureHost) {
+        val permissions = permissions(host)
         OpenPasturePacket(
             pcId = link.pcId,
             pastureId = link.linkId,
-            limit = crusher.slotLimit(),
-            tetheredPokemon = crusher.toPastureDTOs(player),
+            limit = host.slotLimit(),
+            tetheredPokemon = host.toPastureDTOs(player),
             permissions = permissions
         ).sendToPlayer(player)
         PastureLinkManager.createLink(player.uuid, PastureLink(link.linkId, link.pcId, link.dimension, link.pos, permissions))
     }
 
-    private fun permissions(crusher: PokeCrusherBlockEntity): PasturePermissions {
-        return PasturePermissions(canUnpastureOthers = false, canPasture = crusher.canAddPokemon(), maxPokemon = crusher.slotLimit())
+    private fun permissions(host: WorkforcePastureHost): PasturePermissions {
+        return PasturePermissions(
+            canUnpastureOthers = false,
+            canPasture = host.canAddPokemon(),
+            maxPokemon = host.slotLimit()
+        )
     }
 
     @JvmStatic
@@ -59,68 +64,73 @@ object PokeCrusherPastureBridge {
             ClosePasturePacket().sendToPlayer(player)
             return true
         }
-        val crusher = player.level().getBlockEntity(link.pos) as? PokeCrusherBlockEntity ?: return false
+
+        val host = player.level().getBlockEntity(link.pos) as? WorkforcePastureHost ?: return false
         val pc = Cobblemon.storage.getPC(link.pcId, player.registryAccess())
         val pokemon = pc[packet.pokemonId] ?: return true
-        if (!crusher.accepts(pokemon)) {
-            player.sendSystemMessage(Component.literal("Only Steel-type and Normal-type Pokemon can help this crusher."))
+
+        if (!host.accepts(pokemon)) {
+            player.sendSystemMessage(Component.literal(host.wrongTypeMessage))
             return true
         }
         if (pokemon.isFainted()) {
-            player.sendSystemMessage(Component.literal("Fainted Pokemon cannot power this crusher."))
+            player.sendSystemMessage(Component.literal("Fainted Pokemon cannot power this ${host.pastureDisplayName}."))
             return true
         }
         if (pokemon.tetheringId != null) {
             player.sendSystemMessage(Component.literal("That Pokemon is already assigned somewhere else."))
             return true
         }
-        if (!crusher.canAddPokemon(pokemon)) {
-            player.sendSystemMessage(Component.literal("This Poke Crusher does not have an available slot for that Pokemon type."))
+        if (!host.canAddPokemon(pokemon)) {
+            player.sendSystemMessage(Component.literal(host.slotUnavailableMessage))
             return true
         }
-        if (!crusher.addPokemon(player, pokemon, pc.uuid)) {
-            player.sendSystemMessage(Component.literal("This Poke Crusher is full."))
+        if (!host.addPokemon(player, pokemon, pc.uuid)) {
+            player.sendSystemMessage(Component.literal("This ${host.pastureDisplayName} is full."))
             return true
         }
-        crusher.toPastureDTOs(player).firstOrNull { it.pokemonId == pokemon.uuid }?.let { PokemonPasturedPacket(it).sendToPlayer(player) }
-        syncOpen(player, link, crusher)
-        player.sendSystemMessage(Component.literal("${pokemon.getDisplayName().string} is now crushing nearby ores."))
+
+        host.toPastureDTOs(player).firstOrNull { it.pokemonId == pokemon.uuid }?.let { PokemonPasturedPacket(it).sendToPlayer(player) }
+        syncOpen(player, link, host)
+        player.sendSystemMessage(Component.literal(host.onPasturedMessage(pokemon)))
         return true
     }
 
     @JvmStatic
     fun handleUnpasturePokemon(packet: UnpasturePokemonPacket, server: MinecraftServer, player: ServerPlayer): Boolean {
         val link = PastureLinkManager.getLinkByPlayer(player) ?: return false
-        val crusher = player.level().getBlockEntity(link.pos) as? PokeCrusherBlockEntity ?: return false
-        if (!crusher.ownsPokemon(player, packet.pokemonId)) {
+        val host = player.level().getBlockEntity(link.pos) as? WorkforcePastureHost ?: return false
+        if (!host.ownsPokemon(player, packet.pokemonId)) {
             ClosePasturePacket().sendToPlayer(player)
             return true
         }
-        crusher.removePokemon(packet.pokemonId)
+
+        host.removePokemon(packet.pokemonId)
         PokemonUnpasturedPacket(packet.pokemonId).sendToPlayer(player)
-        syncOpen(player, link, crusher)
+        syncOpen(player, link, host)
         return true
     }
 
     @JvmStatic
     fun handleUnpastureAllPokemon(packet: UnpastureAllPokemonPacket, server: MinecraftServer, player: ServerPlayer): Boolean {
         val link = PastureLinkManager.getLinkByPlayer(player) ?: return false
-        val crusher = player.level().getBlockEntity(link.pos) as? PokeCrusherBlockEntity ?: return false
-        if (!crusher.isOwner(player)) {
+        val host = player.level().getBlockEntity(link.pos) as? WorkforcePastureHost ?: return false
+        if (!host.isOwner(player)) {
             ClosePasturePacket().sendToPlayer(player)
             return true
         }
-        crusher.storedPokemonIdsFor(player).forEach {
-            crusher.removePokemon(it)
+
+        host.storedPokemonIdsFor(player).forEach {
+            host.removePokemon(it)
             PokemonUnpasturedPacket(it).sendToPlayer(player)
         }
-        syncOpen(player, link, crusher)
+        syncOpen(player, link, host)
         return true
     }
 
     @JvmStatic
     fun handleSetPastureConflict(packet: SetPastureConflictPacket, server: MinecraftServer, player: ServerPlayer): Boolean {
         val link = PastureLinkManager.getLinkByPlayer(player) ?: return false
-        return player.level().getBlockEntity(link.pos) is PokeCrusherBlockEntity
+        return player.level().getBlockEntity(link.pos) is WorkforcePastureHost
     }
 }

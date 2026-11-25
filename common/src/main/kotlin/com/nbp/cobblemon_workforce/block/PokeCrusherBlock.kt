@@ -2,7 +2,7 @@ package com.nbp.cobblemon_workforce.block
 
 import com.mojang.serialization.MapCodec
 import com.nbp.cobblemon_workforce.block.entity.PokeCrusherBlockEntity
-import com.nbp.cobblemon_workforce.pasture.PokeCrusherPastureBridge
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureBridge
 import com.nbp.cobblemon_workforce.registry.ModRegistry
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -41,6 +41,11 @@ class PokeCrusherBlock(properties: Properties) : PokeGeneratorBlock(properties) 
     }
 
     override fun codec(): MapCodec<out BaseEntityBlock> = CODEC
+
+    override fun workTooltipLines(): List<String> = listOf(
+        "1. Steel: Crushes raw ores, ore blocks, and ancient debris into 2x dust/scrap.",
+        "2. Normal: Automatically transfers crushed items into adjacent chests."
+    )
 
 
 
@@ -128,7 +133,7 @@ class PokeCrusherBlock(properties: Properties) : PokeGeneratorBlock(properties) 
         }
         val basePos = if (state.getValue(PART) == GeneratorPart.TOP) pos.below() else pos
         val crusher = level.getBlockEntity(basePos) as? PokeCrusherBlockEntity ?: return InteractionResult.SUCCESS
-        PokeCrusherPastureBridge.open(player, basePos, crusher)
+        WorkforcePastureBridge.open(player, basePos, crusher)
         return InteractionResult.SUCCESS
     }
 

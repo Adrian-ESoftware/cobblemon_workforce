@@ -2,7 +2,7 @@ package com.nbp.cobblemon_workforce.block
 
 import com.mojang.serialization.MapCodec
 import com.nbp.cobblemon_workforce.block.entity.PokeBreederBlockEntity
-import com.nbp.cobblemon_workforce.pasture.PokeBreederPastureBridge
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureBridge
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -26,6 +26,10 @@ class PokeBreederBlock(properties: Properties) : PokeGeneratorBlock(properties) 
 
     override fun codec(): MapCodec<out BaseEntityBlock> = CODEC
 
+    override fun workTooltipLines(): List<String> = listOf(
+        "1. Fairy/Normal/Psychic: Puts nearby animals into breeding mode."
+    )
+
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return if (state.getValue(PART) == GeneratorPart.BOTTOM) PokeBreederBlockEntity(pos, state) else null
     }
@@ -48,7 +52,7 @@ class PokeBreederBlock(properties: Properties) : PokeGeneratorBlock(properties) 
         }
         val basePos = if (state.getValue(PART) == GeneratorPart.TOP) pos.below() else pos
         val breeder = level.getBlockEntity(basePos) as? PokeBreederBlockEntity ?: return InteractionResult.SUCCESS
-        PokeBreederPastureBridge.open(player, basePos, breeder)
+        WorkforcePastureBridge.open(player, basePos, breeder)
         return InteractionResult.SUCCESS
     }
 

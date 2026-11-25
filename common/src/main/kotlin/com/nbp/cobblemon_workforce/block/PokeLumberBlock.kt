@@ -2,7 +2,7 @@ package com.nbp.cobblemon_workforce.block
 
 import com.mojang.serialization.MapCodec
 import com.nbp.cobblemon_workforce.block.entity.PokeLumberBlockEntity
-import com.nbp.cobblemon_workforce.pasture.PokeLumberPastureBridge
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureBridge
 import com.nbp.cobblemon_workforce.registry.ModRegistry
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
@@ -34,6 +34,12 @@ class PokeLumberBlock(properties: Properties) : PokeGeneratorBlock(properties) {
     }
 
     override fun codec(): MapCodec<out BaseEntityBlock> = CODEC
+
+    override fun workTooltipLines(): List<String> = listOf(
+        "1. Fighting: Fells nearby trees with a punch combo.",
+        "2. Grass: Breaks leaves and automatically replants saplings.",
+        "3. Normal: Collects logs, sticks, and saplings into adjacent chests."
+    )
 
     override fun useItemOn(
         stack: ItemStack,
@@ -113,7 +119,7 @@ class PokeLumberBlock(properties: Properties) : PokeGeneratorBlock(properties) {
         }
         val basePos = if (state.getValue(PART) == GeneratorPart.TOP) pos.below() else pos
         val assistant = level.getBlockEntity(basePos) as? PokeLumberBlockEntity ?: return InteractionResult.SUCCESS
-        PokeLumberPastureBridge.open(player, basePos, assistant)
+        WorkforcePastureBridge.open(player, basePos, assistant)
         return InteractionResult.SUCCESS
     }
 

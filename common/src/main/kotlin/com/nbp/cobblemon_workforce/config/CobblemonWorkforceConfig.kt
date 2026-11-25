@@ -15,6 +15,7 @@ object CobblemonWorkforceConfig {
     private const val DEFAULT_EV_BONUS_PERCENT_PER_4_POINTS = 0.25
     private const val DEFAULT_BREEDER_MAX_ANIMALS = 32
     private const val DEFAULT_SLEEP_STATUS_PAUSES_MACHINES = true
+    private const val DEFAULT_ENABLE_WORK_ANIMATIONS = true
 
     private const val CONFIG_FILE_NAME = "cobblemon_workforce.properties"
     private const val MAX_OUTPUT_PER_SIDE_KEY = "max_output_per_side"
@@ -25,6 +26,7 @@ object CobblemonWorkforceConfig {
     private const val EV_BONUS_PERCENT_PER_4_POINTS_KEY = "ev_bonus_percent_per_4_points"
     private const val BREEDER_MAX_ANIMALS_KEY = "breeder_max_animals"
     private const val SLEEP_STATUS_PAUSES_MACHINES_KEY = "sleep_status_pauses_machines"
+    private const val ENABLE_WORK_ANIMATIONS_KEY = "enable_work_animations"
 
     private val logger = LoggerFactory.getLogger("CobblemonWorkforceConfig")
     private val path: Path = Path.of("config", CONFIG_FILE_NAME)
@@ -51,6 +53,9 @@ object CobblemonWorkforceConfig {
         private set
 
     var sleepStatusPausesMachines: Boolean = DEFAULT_SLEEP_STATUS_PAUSES_MACHINES
+        private set
+
+    var enableWorkAnimations: Boolean = DEFAULT_ENABLE_WORK_ANIMATIONS
         private set
 
     fun load() {
@@ -124,6 +129,13 @@ object CobblemonWorkforceConfig {
                 changed = true
             }
 
+        enableWorkAnimations = properties.getProperty(ENABLE_WORK_ANIMATIONS_KEY)
+            ?.let { it.trim().lowercase() == "true" }
+            ?: DEFAULT_ENABLE_WORK_ANIMATIONS.also {
+                properties.setProperty(ENABLE_WORK_ANIMATIONS_KEY, it.toString())
+                changed = true
+            }
+
         if (changed) {
             Files.newOutputStream(path).use {
                 properties.store(it, "Cobblemon WorkForce config")
@@ -157,6 +169,8 @@ object CobblemonWorkforceConfig {
             $BREEDER_MAX_ANIMALS_KEY=$DEFAULT_BREEDER_MAX_ANIMALS
             # Whether Pokemon with the sleep status stop their assigned machines from working.
             $SLEEP_STATUS_PAUSES_MACHINES_KEY=$DEFAULT_SLEEP_STATUS_PAUSES_MACHINES
+            # Whether assigned Pokemon play attack animations and work particles while working.
+            $ENABLE_WORK_ANIMATIONS_KEY=$DEFAULT_ENABLE_WORK_ANIMATIONS
             
             """.trimIndent()
         )

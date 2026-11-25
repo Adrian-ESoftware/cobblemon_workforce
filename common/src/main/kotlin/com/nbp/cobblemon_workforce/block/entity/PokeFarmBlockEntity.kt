@@ -13,7 +13,11 @@ import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.pasture.WorkforceEntityHelper
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureHost
 import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
+import com.nbp.cobblemon_workforce.pokemon.WorkforcePokemonEffects
+import com.nbp.cobblemon_workforce.pokemon.WorkforcePokemonStats
 import java.util.UUID
 import kotlin.math.ceil
 import kotlin.math.min
@@ -24,6 +28,7 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.ListTag
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.tags.BlockTags
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.Mob
@@ -34,14 +39,27 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.BonemealableBlock
 import net.minecraft.world.level.block.CropBlock
+import net.minecraft.world.level.block.DoublePlantBlock
 import net.minecraft.world.level.block.FarmBlock
+import net.minecraft.world.level.block.FlowerBlock
+import net.minecraft.world.level.block.FungusBlock
+import net.minecraft.world.level.block.GrassBlock
+import net.minecraft.world.level.block.MossBlock
+import net.minecraft.world.level.block.NyliumBlock
+import net.minecraft.world.level.block.TallGrassBlock
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.WorldlyContainer
 import net.minecraft.world.phys.AABB
 
 class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
-    BlockEntity(CobblemonWorkforceBlocks.POKE_FARM_BLOCK_ENTITY, pos, state) {
+    BlockEntity(CobblemonWorkforceBlocks.POKE_FARM_BLOCK_ENTITY, pos, state),
+    WorkforcePastureHost {
+
+    override val pastureDisplayName: String = "Poke Farm"
+    override val wrongTypeMessage: String = "Only Grass, Water, and Normal-type Pokemon can help this farm."
+    override val slotUnavailableMessage: String = "This Poke Farm does not have an available slot for that Pokemon type."
+    override fun onPasturedMessage(pokemon: Pokemon): String = "${pokemon.getDisplayName().string} is now helping this farm."
 
     var waterSlotUnlocked: Boolean = false
         private set
@@ -51,20 +69,21 @@ class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
 
     private val storedPokemon = mutableListOf<StoredPokemon>()
     private val collectionBuffer = mutableListOf<ItemStack>()
+    private var loadedAtTick: Long = -1L
 
     fun hasPokemon(): Boolean = storedPokemon.isNotEmpty()
 
     fun hasWaterPokemon(): Boolean = storedPokemon.any { it.slotRole == SlotRole.WATER }
 
-    fun isOwner(player: ServerPlayer): Boolean = storedPokemon.any { it.ownerId == player.uuid }
+    override fun isOwner(player: ServerPlayer): Boolean = storedPokemon.any { it.ownerId == player.uuid }
 
-    fun slotLimit(): Int = 1 + (if (waterSlotUnlocked) 1 else 0) + (if (normalSlotUnlocked) 1 else 0)
+    override fun slotLimit(): Int = 1 + (if (waterSlotUnlocked) 1 else 0) + (if (normalSlotUnlocked) 1 else 0)
 
-    fun canAddPokemon(): Boolean = storedPokemon.any { it.slotRole == SlotRole.GRASS }.not() ||
+    override fun canAddPokemon(): Boolean = storedPokemon.any { it.slotRole == SlotRole.GRASS }.not() ||
         waterSlotUnlocked && storedPokemon.any { it.slotRole == SlotRole.WATER }.not() ||
         normalSlotUnlocked && storedPokemon.any { it.slotRole == SlotRole.NORMAL }.not()
 
-    fun canAddPokemon(pokemon: Pokemon): Boolean = slotRoleFor(pokemon) != null
+    override fun canAddPokemon(pokemon: Pokemon): Boolean = slotRoleFor(pokemon) != null
 
     fun canUpgradeWaterSlot(): Boolean = !waterSlotUnlocked
 
@@ -103,7 +122,7 @@ class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun accepts(pokemon: Pokemon): Boolean {
+    override fun accepts(pokemon: Pokemon): Boolean {
         return pokemon.types.any { it == ElementalTypes.WATER || it == ElementalTypes.GRASS || it == ElementalTypes.NORMAL }
     }
 
@@ -120,7 +139,7 @@ class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
         }
     }
 
-    fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
+    override fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
         val slotRole = slotRoleFor(pokemon)
         if (slotRole == null || storedPokemon.any { it.pokemonId == pokemon.uuid } || !accepts(pokemon)) {
             return false
@@ -151,7 +170,7 @@ class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun removePokemon(pokemonId: UUID): Boolean {
+    override fun removePokemon(pokemonId: UUID): Boolean {
         val removed = storedPokemon.firstOrNull { it.pokemonId == pokemonId } ?: return false
         releaseLinkedPokemon(removed)
         storedPokemon.remove(removed)
@@ -160,11 +179,11 @@ class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
+    override fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
         return storedPokemon.any { it.ownerId == player.uuid && it.pokemonId == pokemonId }
     }
 
-    fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
+    override fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
         return storedPokemon.filter { it.ownerId == player.uuid }.map { it.pokemonId }
     }
 
@@ -183,7 +202,7 @@ class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
         }
     }
 
-    fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
+    override fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
         val registryAccess = level?.server?.registryAccess() ?: viewer.registryAccess()
         return storedPokemon.mapNotNull { entry ->
             val pokemon = Cobblemon.storage.getPC(entry.pcId, registryAccess)[entry.pokemonId] ?: return@mapNotNull null
@@ -240,11 +259,20 @@ class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun tickFarm(world: ServerLevel) {
+        if (loadedAtTick < 0L) loadedAtTick = world.gameTime
         val awakePokemon = storedPokemon.filter { PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId) }
+        val waterEntry = awakePokemon.firstOrNull { it.slotRole == SlotRole.WATER }
+        val grassEntry = awakePokemon.firstOrNull { it.slotRole == SlotRole.GRASS }
+        val normalEntry = awakePokemon.firstOrNull { it.slotRole == SlotRole.NORMAL }
         val waterPower = awakePokemon.filter { it.slotRole == SlotRole.WATER }.sumOf { it.farmPower }
         val grassPower = awakePokemon.filter { it.slotRole == SlotRole.GRASS }.sumOf { it.farmPower }
         val normalPower = awakePokemon.filter { it.slotRole == SlotRole.NORMAL }.sumOf { it.farmPower }
-        val collectionBudget = normalPower.takeIf { it > 0 }?.let { CollectionBudget(collectionItemLimitFor(it)) }
+        val waterProfile = waterEntry?.let { WorkforcePokemonStats.profileFor(world, it.pcId, it.pokemonId) } ?: WorkforcePokemonStats.NEUTRAL_PROFILE
+        val grassProfile = grassEntry?.let { WorkforcePokemonStats.profileFor(world, it.pcId, it.pokemonId) } ?: WorkforcePokemonStats.NEUTRAL_PROFILE
+        val normalProfile = normalEntry?.let { WorkforcePokemonStats.profileFor(world, it.pcId, it.pokemonId) } ?: WorkforcePokemonStats.NEUTRAL_PROFILE
+        val collectionBudget = normalPower.takeIf { it > 0 }?.let {
+            CollectionBudget((collectionItemLimitFor(it) * normalProfile.yieldMultiplier).toInt().coerceAtLeast(1))
+        }
         if (collectionBudget != null) {
             flushCollectionBuffer(world, collectionBudget)
         }
@@ -257,23 +285,42 @@ class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
             .shuffled()
 
         if (waterPower > 0) {
-            hydrateFarmland(world)
-            positions.asSequence()
+            val hydratedTarget = hydrateFarmland(world)
+            val waterActions = (actionCountFor(waterPower) * waterProfile.speedMultiplier).toInt().coerceAtLeast(1)
+            val grownTargets = positions.asSequence()
                 .filter { tryGrow(world, it) }
-                .take(actionCountFor(waterPower))
-                .count()
+                .take(waterActions)
+                .toList()
+            val waterAnimTarget = grownTargets.firstOrNull() ?: hydratedTarget
+            if (waterAnimTarget != null && waterEntry != null) {
+                val pokemon = Cobblemon.storage.getPC(waterEntry.pcId, world.registryAccess())[waterEntry.pokemonId]
+                pokemon?.let(::getPokemonEntity)?.let {
+                    WorkforcePokemonEffects.playWaterFarmWork(world, it, waterAnimTarget)
+                }
+            }
         }
 
         if (grassPower > 0) {
-            positions.asSequence()
-                .filter { tryHarvest(world, it, harvestMultiplierFor(grassPower), collectionBudget) }
-                .take(actionCountFor(grassPower))
-                .count()
+            val grassActions = (actionCountFor(grassPower) * grassProfile.speedMultiplier).toInt().coerceAtLeast(1)
+            val effectiveMultiplier = (harvestMultiplierFor(grassPower) + grassProfile.rollBonusDropCount(world.random)).coerceAtLeast(1)
+            val harvestedTargets = positions.asSequence()
+                .filter { tryHarvest(world, it, effectiveMultiplier, collectionBudget) }
+                .take(grassActions)
+                .toList()
+            if (harvestedTargets.isNotEmpty() && grassEntry != null) {
+                val pokemon = Cobblemon.storage.getPC(grassEntry.pcId, world.registryAccess())[grassEntry.pokemonId]
+                pokemon?.let(::getPokemonEntity)?.let {
+                    WorkforcePokemonEffects.playGrassFarmWork(world, it, harvestedTargets.first())
+                }
+            }
         }
     }
 
     private fun tryGrow(world: ServerLevel, pos: BlockPos): Boolean {
         val state = world.getBlockState(pos)
+        if (!canGrowPlant(state)) {
+            return false
+        }
         val block = state.block as? BonemealableBlock ?: return false
         if (!block.isValidBonemealTarget(world, pos, state) || !block.isBonemealSuccess(world, world.random, pos, state)) {
             return false
@@ -283,19 +330,40 @@ class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    private fun hydrateFarmland(world: ServerLevel) {
+    private fun canGrowPlant(state: BlockState): Boolean {
+        val block = state.block
+        if (block is GrassBlock ||
+            block is TallGrassBlock ||
+            block is DoublePlantBlock ||
+            block is FlowerBlock ||
+            block is MossBlock ||
+            block is NyliumBlock ||
+            block is FungusBlock ||
+            state.`is`(BlockTags.FLOWERS)
+        ) {
+            return false
+        }
+        return true
+    }
+
+    private fun hydrateFarmland(world: ServerLevel): BlockPos? {
         val range = wateringRange(world)
         if (range <= 0) {
-            return
+            return null
         }
 
+        var firstHydrated: BlockPos? = null
         BlockPos.betweenClosed(blockPos.offset(-range, -2, -range), blockPos.offset(range, 2, range)).forEach { pos ->
             val farmPos = pos.immutable()
             val state = world.getBlockState(farmPos)
             if (state.block is FarmBlock && state.getValue(FarmBlock.MOISTURE) < FarmBlock.MAX_MOISTURE) {
                 world.setBlock(farmPos, state.setValue(FarmBlock.MOISTURE, FarmBlock.MAX_MOISTURE), Block.UPDATE_CLIENTS)
+                if (firstHydrated == null) {
+                    firstHydrated = farmPos
+                }
             }
         }
+        return firstHydrated
     }
 
     private fun tryHarvest(world: ServerLevel, pos: BlockPos, harvestMultiplier: Int, collectionBudget: CollectionBudget?): Boolean {
@@ -537,45 +605,22 @@ class PokeFarmBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun ensureVisiblePokemon(world: ServerLevel, entry: StoredPokemon) {
+        WorkforceEntityHelper.ensureVisiblePokemon(
+            world = world,
+            blockPos = blockPos,
+            loadedAtTick = loadedAtTick,
+            pokemonId = entry.pokemonId,
+            pcId = entry.pcId,
+            linkId = entry.linkId,
+            showPokemonOutside = CobblemonWorkforceConfig.showPokemonOutside,
+            createTethering = { entityId -> createVisibleTethering(entry, entityId) },
+            findSpawnPos = { entity -> findVisibleSpawnPos(world, entity) },
+            loggerContext = "Poke Farm"
+        )
         val pokemon = Cobblemon.storage.getPC(entry.pcId, world.registryAccess())[entry.pokemonId] ?: return
-        var existing: Entity? = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == entry.linkId }
-
-        if (existing == null) {
-            val searchBox = AABB(blockPos).inflate(CobblemonWorkforceConfig.pokemonWanderRange.toDouble() + 10.0)
-            val entities = world.getEntitiesOfClass(Entity::class.java, searchBox) { ent ->
-                val tether = getTethering(ent)
-                tether != null && tether.pokemonId == entry.pokemonId
-            }
-            if (entities.isNotEmpty()) {
-                existing = entities.first()
-                for (i in 1 until entities.size) {
-                    entities[i].discard()
-                }
-            }
-        }
-
-        if (!CobblemonWorkforceConfig.showPokemonOutside) {
-            if (existing != null) {
-                existing.discard()
-                if (pokemon.tetheringId == entry.linkId) {
-                    pokemon.tetheringId = null
-                }
-            }
-            return
-        }
-
-        if (existing != null) {
+        val existing = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == entry.linkId }
+        if (existing != null && CobblemonWorkforceConfig.showPokemonOutside) {
             keepCloseToFarm(world, existing, entry)
-            return
-        }
-
-        pokemon.tetheringId = entry.linkId
-        val entity = createPokemonEntity(world, pokemon) ?: return
-        val spawnPos = findVisibleSpawnPos(world, entity) ?: return
-        entity.setPos(spawnPos.center.subtract(0.0, 0.5, 0.0))
-        if (world.addFreshEntity(entity)) {
-            setTethering(entity, createVisibleTethering(entry, entity.id))
-            keepCloseToFarm(world, entity, entry)
         }
     }
 

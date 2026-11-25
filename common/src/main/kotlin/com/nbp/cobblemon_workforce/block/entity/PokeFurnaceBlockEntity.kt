@@ -13,7 +13,11 @@ import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.block.PokeGeneratorBlock
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
 import com.nbp.cobblemon_workforce.mixin.AbstractFurnaceBlockEntityAccessor
+import com.nbp.cobblemon_workforce.pasture.WorkforceEntityHelper
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureHost
 import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
+import com.nbp.cobblemon_workforce.pokemon.WorkforcePokemonEffects
+import com.nbp.cobblemon_workforce.pokemon.WorkforcePokemonStats
 import java.util.UUID
 import kotlin.math.ceil
 import net.minecraft.core.BlockPos
@@ -40,20 +44,27 @@ import net.minecraft.world.phys.AABB
 
 class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
     BlockEntity(CobblemonWorkforceBlocks.POKE_FURNACE_BLOCK_ENTITY, pos, state),
-    WorldlyContainer {
+    WorldlyContainer,
+    WorkforcePastureHost {
+
+    override val pastureDisplayName: String = "Poke Furnace"
+    override val wrongTypeMessage: String = "Only Fire-type Pokemon can power this furnace."
+    override fun slotLimit(): Int = 1
+    override fun onPasturedMessage(pokemon: Pokemon): String = "${pokemon.getDisplayName().string} is now heating nearby furnaces."
 
     private var storedPokemon: StoredPokemon? = null
     private val items = mutableListOf(ItemStack.EMPTY, ItemStack.EMPTY)
     private var cookProgress = 0
     private var boostProgress = 0.0
+    private var loadedAtTick: Long = -1L
 
-    fun isOwner(player: ServerPlayer): Boolean = storedPokemon?.ownerId == player.uuid
+    override fun isOwner(player: ServerPlayer): Boolean = storedPokemon?.ownerId == player.uuid
 
-    fun canAddPokemon(): Boolean = storedPokemon == null
+    override fun canAddPokemon(): Boolean = storedPokemon == null
 
-    fun accepts(pokemon: Pokemon): Boolean = pokemon.types.any { it == ElementalTypes.FIRE }
+    override fun accepts(pokemon: Pokemon): Boolean = pokemon.types.any { it == ElementalTypes.FIRE }
 
-    fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
+    override fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
         if (!canAddPokemon() || !accepts(pokemon)) {
             return false
         }
@@ -74,7 +85,7 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun removePokemon(pokemonId: UUID): Boolean {
+    override fun removePokemon(pokemonId: UUID): Boolean {
         val stored = storedPokemon ?: return false
         if (stored.pokemonId != pokemonId) {
             return false
@@ -87,11 +98,11 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
+    override fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
         return storedPokemon?.let { it.ownerId == player.uuid && it.pokemonId == pokemonId } == true
     }
 
-    fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
+    override fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
         val stored = storedPokemon ?: return emptyList()
         return if (stored.ownerId == player.uuid) listOf(stored.pokemonId) else emptyList()
     }
@@ -111,7 +122,7 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
         }
     }
 
-    fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
+    override fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
         val entry = storedPokemon ?: return emptyList()
         val registryAccess = level?.server?.registryAccess() ?: viewer.registryAccess()
         val pokemon = Cobblemon.storage.getPC(entry.pcId, registryAccess)[entry.pokemonId] ?: return emptyList()
@@ -176,6 +187,7 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun tickFurnace(world: ServerLevel) {
+        if (loadedAtTick < 0L) loadedAtTick = world.gameTime
         val pokemon = storedPokemon ?: run {
             cookProgress = 0
             boostProgress = 0.0
@@ -206,7 +218,18 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
             return false
         }
 
-        boostProgress += speedMultiplierFor(pokemon) - 1.0
+        val targetFurnace = heatedFurnaces.first()
+        val mon = Cobblemon.storage.getPC(pokemon.pcId, world.registryAccess())[pokemon.pokemonId]
+        val entity = mon?.let(::getPokemonEntity)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == pokemon.linkId }
+        if (entity != null) {
+            positionAndAimAtFurnace(world, entity, targetFurnace)
+            if (world.gameTime % 40L == 0L) {
+                WorkforcePokemonEffects.playFireFurnaceWork(world, entity, targetFurnace.blockPos)
+            }
+        }
+
+        val profile = WorkforcePokemonStats.profileFor(world, pokemon.pcId, pokemon.pokemonId)
+        boostProgress += (speedMultiplierFor(pokemon) * profile.speedMultiplier) - 1.0
         val extraTicks = boostProgress.toInt()
         boostProgress -= extraTicks
         if (extraTicks <= 0) {
@@ -327,50 +350,61 @@ class PokeFurnaceBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun ensureVisiblePokemon(world: ServerLevel, entry: StoredPokemon) {
+        WorkforceEntityHelper.ensureVisiblePokemon(
+            world = world,
+            blockPos = blockPos,
+            loadedAtTick = loadedAtTick,
+            pokemonId = entry.pokemonId,
+            pcId = entry.pcId,
+            linkId = entry.linkId,
+            showPokemonOutside = CobblemonWorkforceConfig.showPokemonOutside,
+            createTethering = { entityId -> createVisibleTethering(entry, entityId) },
+            findSpawnPos = { entity -> findVisibleSpawnPos(world, entity) },
+            loggerContext = "Poke Furnace"
+        )
         val pokemon = Cobblemon.storage.getPC(entry.pcId, world.registryAccess())[entry.pokemonId] ?: return
-        var existing: Entity? = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == entry.linkId }
-
-        if (existing == null) {
-            val searchBox = AABB(blockPos).inflate(CobblemonWorkforceConfig.pokemonWanderRange.toDouble() + 10.0)
-            val entities = world.getEntitiesOfClass(Entity::class.java, searchBox) { ent ->
-                val tether = getTethering(ent)
-                tether != null && tether.pokemonId == entry.pokemonId
-            }
-            if (entities.isNotEmpty()) {
-                existing = entities.first()
-                for (i in 1 until entities.size) {
-                    entities[i].discard()
-                }
-            }
-        }
-
-        if (!CobblemonWorkforceConfig.showPokemonOutside) {
-            existing?.discard()
-            if (pokemon.tetheringId == entry.linkId) {
-                pokemon.tetheringId = null
-            }
-            return
-        }
-
-        if (existing != null) {
-            keepTethered(existing, entry)
+        val existing = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == entry.linkId }
+        if (existing != null && CobblemonWorkforceConfig.showPokemonOutside) {
             keepNearFurnace(world, existing)
-            return
         }
+    }
 
-        pokemon.tetheringId = entry.linkId
-        val entity = createPokemonEntity(world, pokemon) ?: return
-        val spawnPos = findVisibleSpawnPos(world, entity) ?: return
-        entity.setPos(spawnPos.center.subtract(0.0, 0.5, 0.0))
-        if (world.addFreshEntity(entity)) {
-            setTethering(entity, createVisibleTethering(entry, entity.id))
-            keepTethered(entity, entry)
-            keepNearFurnace(world, entity)
+    private fun positionAndAimAtFurnace(world: ServerLevel, entity: Entity, furnace: AbstractFurnaceBlockEntity) {
+        val mob = entity as? Mob ?: return
+        val standPos = furnaceFrontStandPos(world, furnace, entity)
+        if (mob.blockPosition().distSqr(standPos) > 2.25) {
+            if (world.gameTime % 10L == 0L) {
+                mob.navigation.moveTo(standPos.x + 0.5, standPos.y.toDouble(), standPos.z + 0.5, 0.55)
+            }
+        } else {
+            mob.navigation.stop()
         }
+        WorkforcePokemonEffects.lookAt(mob, furnace.blockPos)
+    }
+
+    private fun furnaceFrontStandPos(world: ServerLevel, furnace: AbstractFurnaceBlockEntity, entity: Entity): BlockPos {
+        val state = furnace.blockState
+        val facing = if (state.hasProperty(AbstractFurnaceBlock.FACING)) {
+            state.getValue(AbstractFurnaceBlock.FACING)
+        } else {
+            Direction.NORTH
+        }
+        for (distance in listOf(3, 2, 1)) {
+            val candidate = furnace.blockPos.relative(facing, distance)
+            val floor = candidate.below()
+            val box = entity.getDimensions(Pose.STANDING).makeBoundingBox(candidate.center.subtract(0.0, 0.5, 0.0))
+            if (!world.collidesWithSuffocatingBlock(entity, box) && isSafeFloor(world, floor, entity)) {
+                return candidate
+            }
+        }
+        return furnace.blockPos.relative(facing, 3)
     }
 
     private fun keepNearFurnace(world: ServerLevel, entity: Entity) {
         val mob = entity as? Mob ?: return
+        if (adjacentFurnaces(world).any { !it.getItem(0).isEmpty }) {
+            return
+        }
         if (world.gameTime % 20L == 0L && mob.blockPosition().distManhattan(blockPos) > CobblemonWorkforceConfig.pokemonWanderRange) {
             mob.navigation.moveTo(blockPos.x + 0.5, blockPos.y.toDouble(), blockPos.z + 0.5, RETURN_SPEED)
         }

@@ -2,8 +2,9 @@ package com.nbp.cobblemon_workforce.block
 
 import com.mojang.serialization.MapCodec
 import com.nbp.cobblemon_workforce.block.entity.PokeGeneratorBlockEntity
-import com.nbp.cobblemon_workforce.pasture.PokeGeneratorPastureBridge
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureBridge
 import com.nbp.cobblemon_workforce.registry.ModRegistry
+import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.Direction
@@ -17,7 +18,9 @@ import net.minecraft.world.ItemInteractionResult
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.level.GameRules
 import net.minecraft.world.level.Level
@@ -44,6 +47,21 @@ import net.minecraft.world.level.storage.loot.LootParams
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams
 
 open class PokeGeneratorBlock(properties: Properties) : BaseEntityBlock(properties) {
+    protected open fun workTooltipLines(): List<String> = listOf(
+        "1. Electric: Generates FE power using Attack/Sp. Attack, IVs, EVs, and Level."
+    )
+
+    override fun appendHoverText(
+        stack: ItemStack,
+        context: Item.TooltipContext,
+        tooltipComponents: MutableList<Component>,
+        tooltipFlag: TooltipFlag
+    ) {
+        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag)
+        workTooltipLines().forEach { line ->
+            tooltipComponents.add(Component.literal(line).withStyle(ChatFormatting.GRAY))
+        }
+    }
     companion object {
         val CODEC: MapCodec<PokeGeneratorBlock> = simpleCodec(::PokeGeneratorBlock)
         val ON: BooleanProperty = BooleanProperty.create("on")
@@ -312,7 +330,7 @@ open class PokeGeneratorBlock(properties: Properties) : BaseEntityBlock(properti
         val basePos = if (state.getValue(PART) == GeneratorPart.TOP) pos.below() else pos
         val generator = level.getBlockEntity(basePos) as? PokeGeneratorBlockEntity ?: return InteractionResult.SUCCESS
 
-        PokeGeneratorPastureBridge.open(player, basePos, generator)
+        WorkforcePastureBridge.open(player, basePos, generator)
 
         return InteractionResult.SUCCESS
     }

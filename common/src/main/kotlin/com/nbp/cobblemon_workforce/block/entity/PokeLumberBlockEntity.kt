@@ -11,7 +11,11 @@ import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureHost
+import com.nbp.cobblemon_workforce.pasture.WorkforceEntityHelper
 import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
+import com.nbp.cobblemon_workforce.pokemon.WorkforcePokemonEffects
+import com.nbp.cobblemon_workforce.pokemon.WorkforcePokemonStats
 import java.util.UUID
 import kotlin.math.ceil
 import kotlin.math.min
@@ -40,7 +44,13 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 
 class PokeLumberBlockEntity(pos: BlockPos, state: BlockState) :
-    BlockEntity(CobblemonWorkforceBlocks.POKE_LUMBER_BLOCK_ENTITY, pos, state) {
+    BlockEntity(CobblemonWorkforceBlocks.POKE_LUMBER_BLOCK_ENTITY, pos, state),
+    WorkforcePastureHost {
+
+    override val pastureDisplayName: String = "Poke Lumber"
+    override val wrongTypeMessage: String = "Only Fighting, Grass, and Normal-type Pokemon can help this lumber."
+    override val slotUnavailableMessage: String = "This Poke Lumber does not have an available slot for that Pokemon type."
+    override fun onPasturedMessage(pokemon: Pokemon): String = "${pokemon.getDisplayName().string} is now working at this Poke Lumber."
 
     var normalSlotUnlocked: Boolean = false
         private set
@@ -51,18 +61,21 @@ class PokeLumberBlockEntity(pos: BlockPos, state: BlockState) :
     private val storedPokemon = mutableListOf<StoredPokemon>()
     private val collectionBuffer = mutableListOf<ItemStack>()
     private val pathAttempts = mutableMapOf<UUID, Int>()
+    private var pendingTreeTarget: BlockPos? = null
+    private var pendingPunchTicks: Int = 0
+    private var loadedAtTick: Long = -1L
 
-    fun isOwner(player: ServerPlayer): Boolean = storedPokemon.any { it.ownerId == player.uuid }
+    override fun isOwner(player: ServerPlayer): Boolean = storedPokemon.any { it.ownerId == player.uuid }
 
-    fun slotLimit(): Int = 1 + (if (normalSlotUnlocked) 1 else 0) + (if (plantSlotUnlocked) 1 else 0)
+    override fun slotLimit(): Int = 1 + (if (normalSlotUnlocked) 1 else 0) + (if (plantSlotUnlocked) 1 else 0)
 
-    fun canAddPokemon(): Boolean = storedPokemon.none { it.role == SlotRole.FIGHTING } ||
+    override fun canAddPokemon(): Boolean = storedPokemon.none { it.role == SlotRole.FIGHTING } ||
         normalSlotUnlocked && storedPokemon.none { it.role == SlotRole.NORMAL } ||
         plantSlotUnlocked && storedPokemon.none { it.role == SlotRole.GRASS }
 
-    fun canAddPokemon(pokemon: Pokemon): Boolean = slotRoleFor(pokemon) != null
+    override fun canAddPokemon(pokemon: Pokemon): Boolean = slotRoleFor(pokemon) != null
 
-    fun accepts(pokemon: Pokemon): Boolean {
+    override fun accepts(pokemon: Pokemon): Boolean {
         return pokemon.types.any { it == ElementalTypes.FIGHTING || it == ElementalTypes.NORMAL || it == ElementalTypes.GRASS }
     }
 
@@ -113,7 +126,7 @@ class PokeLumberBlockEntity(pos: BlockPos, state: BlockState) :
         }
     }
 
-    fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
+    override fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
         val role = slotRoleFor(pokemon) ?: return false
         if (storedPokemon.any { it.pokemonId == pokemon.uuid } || !accepts(pokemon)) {
             return false
@@ -137,7 +150,7 @@ class PokeLumberBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun removePokemon(pokemonId: UUID): Boolean {
+    override fun removePokemon(pokemonId: UUID): Boolean {
         val removed = storedPokemon.firstOrNull { it.pokemonId == pokemonId } ?: return false
         releaseLinkedPokemon(removed)
         storedPokemon.remove(removed)
@@ -146,11 +159,11 @@ class PokeLumberBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
+    override fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
         return storedPokemon.any { it.ownerId == player.uuid && it.pokemonId == pokemonId }
     }
 
-    fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
+    override fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
         return storedPokemon.filter { it.ownerId == player.uuid }.map { it.pokemonId }
     }
 
@@ -170,7 +183,7 @@ class PokeLumberBlockEntity(pos: BlockPos, state: BlockState) :
         }
     }
 
-    fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
+    override fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
         val registryAccess = level?.server?.registryAccess() ?: viewer.registryAccess()
         return storedPokemon.mapNotNull { entry ->
             val pokemon = Cobblemon.storage.getPC(entry.pcId, registryAccess)[entry.pokemonId] ?: return@mapNotNull null
@@ -233,21 +246,57 @@ class PokeLumberBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun tickWood(world: ServerLevel) {
+        if (loadedAtTick < 0L) loadedAtTick = world.gameTime
         ensureVisiblePokemon()
         val awakePokemon = storedPokemon.filter { PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId) }
         val fighter = awakePokemon.firstOrNull { it.role == SlotRole.FIGHTING }
+        val normalEntry = awakePokemon.firstOrNull { it.role == SlotRole.NORMAL }
         val fightingPower = fighter?.power ?: 0
         val normalPower = awakePokemon.filter { it.role == SlotRole.NORMAL }.sumOf { it.power }
-        val collectionBudget = normalPower.takeIf { it > 0 }?.let { CollectionBudget(collectionItemLimitFor(it)) }
+        val normalProfile = normalEntry?.let { WorkforcePokemonStats.profileFor(world, it.pcId, it.pokemonId) } ?: WorkforcePokemonStats.NEUTRAL_PROFILE
+        val collectionBudget = normalPower.takeIf { it > 0 }?.let {
+            CollectionBudget((collectionItemLimitFor(it) * normalProfile.yieldMultiplier).toInt().coerceAtLeast(1))
+        }
         if (collectionBudget != null) {
             flushCollectionBuffer(world, collectionBudget)
         }
-        if (fighter == null || fightingPower <= 0 || world.gameTime % harvestIntervalForLevel(fighter.level) != 0L) {
+        if (fighter == null || fightingPower <= 0) {
+            pendingTreeTarget = null
+            pendingPunchTicks = 0
+            return
+        }
+
+        val activeTarget = pendingTreeTarget
+        if (activeTarget != null) {
+            if (!world.getBlockState(activeTarget).`is`(BlockTags.LOGS)) {
+                pendingTreeTarget = null
+                pendingPunchTicks = 0
+                return
+            }
+
+            pendingPunchTicks--
+            if (pendingPunchTicks > 0) {
+                if (pendingPunchTicks % PUNCH_INTERVAL_TICKS == 0) {
+                    WorkforcePokemonEffects.playTreePunchHit(world, visiblePokemonEntity(world, fighter), activeTarget)
+                }
+                return
+            }
+
+            pendingTreeTarget = null
+            pendingPunchTicks = 0
+            WorkforcePokemonEffects.playTreePunchHit(world, visiblePokemonEntity(world, fighter), activeTarget)
+            harvestTreeAt(world, activeTarget, collectionBudget)
+            return
+        }
+
+        val fighterProfile = WorkforcePokemonStats.profileFor(world, fighter.pcId, fighter.pokemonId)
+        val interval = fighterProfile.adjustedInterval(harvestIntervalForLevel(fighter.level).toInt(), minInterval = 12, maxInterval = 240)
+        if (world.gameTime % interval.toLong() != 0L) {
             return
         }
 
         val target = findNearestLog(world, rangeForLevel(fighter.level)) ?: return
-        tryHarvestWood(world, fighter, target, collectionBudget)
+        tryHarvestWood(world, fighter, target)
     }
 
     private fun findNearestLog(world: ServerLevel, range: Int): BlockPos? {
@@ -257,7 +306,7 @@ class PokeLumberBlockEntity(pos: BlockPos, state: BlockState) :
             .minByOrNull { it.distManhattan(blockPos) }
     }
 
-    private fun tryHarvestWood(world: ServerLevel, fighter: StoredPokemon, pos: BlockPos, collectionBudget: CollectionBudget?): Boolean {
+    private fun tryHarvestWood(world: ServerLevel, fighter: StoredPokemon, pos: BlockPos): Boolean {
         val fighterEntity = visiblePokemonEntity(world, fighter)
         if (fighterEntity == null || !isNearLog(fighterEntity, pos)) {
             val attempts = (pathAttempts[fighter.pokemonId] ?: 0) + 1
@@ -268,6 +317,13 @@ class PokeLumberBlockEntity(pos: BlockPos, state: BlockState) :
         }
 
         pathAttempts.remove(fighter.pokemonId)
+        pendingTreeTarget = pos
+        pendingPunchTicks = PUNCH_FLURRY_TICKS
+        WorkforcePokemonEffects.playTreePunchHit(world, fighterEntity ?: visiblePokemonEntity(world, fighter), pos)
+        return true
+    }
+
+    private fun harvestTreeAt(world: ServerLevel, pos: BlockPos, collectionBudget: CollectionBudget?): Boolean {
         val hasPlantHelper = storedPokemon.any {
             it.role == SlotRole.GRASS && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId)
         }
@@ -561,46 +617,18 @@ class PokeLumberBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun ensureVisiblePokemon(world: ServerLevel, entry: StoredPokemon) {
-        val pokemon = Cobblemon.storage.getPC(entry.pcId, world.registryAccess())[entry.pokemonId] ?: return
-        var existing: Entity? = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == entry.linkId }
-
-        if (existing == null) {
-            val searchBox = AABB(blockPos).inflate(CobblemonWorkforceConfig.pokemonWanderRange.toDouble() + 10.0)
-            val entities = world.getEntitiesOfClass(Entity::class.java, searchBox) { ent ->
-                val tether = getTethering(ent)
-                tether != null && tether.pokemonId == entry.pokemonId
-            }
-            if (entities.isNotEmpty()) {
-                existing = entities.first()
-                for (i in 1 until entities.size) {
-                    entities[i].discard()
-                }
-            }
-        }
-
-        if (!CobblemonWorkforceConfig.showPokemonOutside) {
-            if (existing != null) {
-                existing.discard()
-                if (pokemon.tetheringId == entry.linkId) {
-                    pokemon.tetheringId = null
-                }
-            }
-            return
-        }
-
-        if (existing != null) {
-            keepTethered(existing, entry)
-            return
-        }
-
-        pokemon.tetheringId = entry.linkId
-        val entity = createPokemonEntity(world, pokemon) ?: return
-        val spawnPos = findVisibleSpawnPos(world, entity, entry.role) ?: return
-        entity.setPos(spawnPos.center.subtract(0.0, 0.5, 0.0))
-        if (world.addFreshEntity(entity)) {
-            setTethering(entity, createVisibleTethering(entry, entity.id))
-            keepTethered(entity, entry)
-        }
+        WorkforceEntityHelper.ensureVisiblePokemon(
+            world = world,
+            blockPos = blockPos,
+            loadedAtTick = loadedAtTick,
+            pokemonId = entry.pokemonId,
+            pcId = entry.pcId,
+            linkId = entry.linkId,
+            showPokemonOutside = CobblemonWorkforceConfig.showPokemonOutside,
+            createTethering = { entityId -> createVisibleTethering(entry, entityId) },
+            findSpawnPos = { entity -> findVisibleSpawnPos(world, entity, entry.role) },
+            loggerContext = "Poke Lumber"
+        )
     }
 
     private fun visiblePokemonEntity(world: ServerLevel, entry: StoredPokemon): Entity? {
@@ -740,6 +768,8 @@ class PokeLumberBlockEntity(pos: BlockPos, state: BlockState) :
         private const val SINGLE_TREE_ABOVE_RANGE = 32
         private const val NEIGHBOR_TRUNK_MIN_HEIGHT = 3
         private const val MAX_PATH_ATTEMPTS = 4
+        private const val PUNCH_INTERVAL_TICKS = 6
+        private const val PUNCH_FLURRY_TICKS = 18
         private const val WORK_SPEED = 0.5
         private const val WORK_DISTANCE_SQR = 9.0
         private val TREE_NEIGHBOR_OFFSETS: List<BlockPos> = buildList {

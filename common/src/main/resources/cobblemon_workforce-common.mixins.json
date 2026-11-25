@@ -8,7 +8,8 @@
     "PasturePokemonHandlerMixin",
     "SetPastureConflictHandlerMixin",
     "UnpastureAllPokemonHandlerMixin",
-    "UnpasturePokemonHandlerMixin"
+    "UnpasturePokemonHandlerMixin",
+    "WorkforceEntitySaveMixin"
   ],
   "injectors": {
     "defaultRequire": 1

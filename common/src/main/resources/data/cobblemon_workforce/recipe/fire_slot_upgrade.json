@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BMB",
+    "LSL",
+    "BMB"
+  ],
+  "key": {
+    "B": { "item": "minecraft:blaze_powder" },
+    "M": { "item": "minecraft:magma_cream" },
+    "L": { "item": "minecraft:lava_bucket" },
+    "S": { "item": "cobblemon_workforce:slot_upgrade" }
+  },
+  "result": {
+    "id": "cobblemon_workforce:fire_slot_upgrade",
+    "count": 1
+  }
+}

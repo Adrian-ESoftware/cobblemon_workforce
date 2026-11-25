@@ -157,6 +157,10 @@ object ModRegistry {
         Item(Item.Properties())
     }
 
+    val POKE_MINER_FIRE_SLOT_UPGRADE: RegistrySupplier<Item> = ITEMS.register("fire_slot_upgrade") {
+        Item(Item.Properties())
+    }
+
     val POKE_FARM_NORMAL_SLOT_UPGRADE: RegistrySupplier<Item> = ITEMS.register("normal_slot_upgrade") {
         Item(Item.Properties())
     }
@@ -224,6 +228,7 @@ object ModRegistry {
                 output.accept(POKE_LUMBER.get())
                 output.accept(POKE_GENERATOR_SLOT_UPGRADE.get())
                 output.accept(POKE_FARM_WATER_SLOT_UPGRADE.get())
+                output.accept(POKE_MINER_FIRE_SLOT_UPGRADE.get())
                 output.accept(POKE_FARM_NORMAL_SLOT_UPGRADE.get())
                 output.accept(POKE_LUMBER_PLANT_SLOT_UPGRADE.get())
                 output.accept(IRON_DUST.get())

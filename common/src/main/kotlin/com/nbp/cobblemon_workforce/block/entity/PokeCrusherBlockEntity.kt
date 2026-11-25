@@ -11,7 +11,11 @@ import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.pasture.WorkforceEntityHelper
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureHost
 import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
+import com.nbp.cobblemon_workforce.pokemon.WorkforcePokemonEffects
+import com.nbp.cobblemon_workforce.pokemon.WorkforcePokemonStats
 import com.nbp.cobblemon_workforce.registry.ModRegistry
 import java.util.UUID
 import kotlin.math.ceil
@@ -40,7 +44,13 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 
 class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
-    BlockEntity(CobblemonWorkforceBlocks.POKE_CRUSHER_BLOCK_ENTITY, pos, state) {
+    BlockEntity(CobblemonWorkforceBlocks.POKE_CRUSHER_BLOCK_ENTITY, pos, state),
+    WorkforcePastureHost {
+
+    override val pastureDisplayName: String = "Poke Crusher"
+    override val wrongTypeMessage: String = "Only Steel-type and Normal-type Pokemon can help this crusher."
+    override val slotUnavailableMessage: String = "This Poke Crusher does not have an available slot for that Pokemon type."
+    override fun onPasturedMessage(pokemon: Pokemon): String = "${pokemon.getDisplayName().string} is now working at this Poke Crusher."
 
     var normalSlotUnlocked: Boolean = false
         private set
@@ -48,17 +58,18 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
     private val storedPokemon = mutableListOf<StoredPokemon>()
     private val outputBuffer = mutableListOf<ItemStack>()
     private val pathAttempts = mutableMapOf<UUID, Int>()
+    private var loadedAtTick: Long = -1L
 
-    fun isOwner(player: ServerPlayer): Boolean = storedPokemon.any { it.ownerId == player.uuid }
+    override fun isOwner(player: ServerPlayer): Boolean = storedPokemon.any { it.ownerId == player.uuid }
 
-    fun slotLimit(): Int = 1 + if (normalSlotUnlocked) 1 else 0
+    override fun slotLimit(): Int = 1 + if (normalSlotUnlocked) 1 else 0
 
-    fun canAddPokemon(): Boolean = storedPokemon.none { it.role == SlotRole.STEEL } ||
+    override fun canAddPokemon(): Boolean = storedPokemon.none { it.role == SlotRole.STEEL } ||
         normalSlotUnlocked && storedPokemon.none { it.role == SlotRole.NORMAL }
 
-    fun accepts(pokemon: Pokemon): Boolean = pokemon.types.any { it == ElementalTypes.STEEL || it == ElementalTypes.NORMAL }
+    override fun accepts(pokemon: Pokemon): Boolean = pokemon.types.any { it == ElementalTypes.STEEL || it == ElementalTypes.NORMAL }
 
-    fun canAddPokemon(pokemon: Pokemon): Boolean = slotRoleFor(pokemon) != null
+    override fun canAddPokemon(pokemon: Pokemon): Boolean = slotRoleFor(pokemon) != null
 
     fun canUpgradeNormalSlot(): Boolean = !normalSlotUnlocked
 
@@ -86,7 +97,7 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
         }
     }
 
-    fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
+    override fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
         val role = slotRoleFor(pokemon) ?: return false
         if (storedPokemon.any { it.pokemonId == pokemon.uuid } || !accepts(pokemon)) {
             return false
@@ -109,7 +120,7 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun removePokemon(pokemonId: UUID): Boolean {
+    override fun removePokemon(pokemonId: UUID): Boolean {
         val stored = storedPokemon.firstOrNull { it.pokemonId == pokemonId } ?: return false
         releaseLinkedPokemon(stored)
         storedPokemon.remove(stored)
@@ -118,11 +129,11 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
+    override fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
         return storedPokemon.any { it.ownerId == player.uuid && it.pokemonId == pokemonId }
     }
 
-    fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
+    override fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
         return storedPokemon.filter { it.ownerId == player.uuid }.map { it.pokemonId }
     }
 
@@ -142,7 +153,7 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
         }
     }
 
-    fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
+    override fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
         val registryAccess = level?.server?.registryAccess() ?: viewer.registryAccess()
         return storedPokemon.mapNotNull { entry ->
             val pokemon = Cobblemon.storage.getPC(entry.pcId, registryAccess)[entry.pokemonId] ?: return@mapNotNull null
@@ -198,6 +209,7 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun tickCrusher(world: ServerLevel) {
+        if (loadedAtTick < 0L) loadedAtTick = world.gameTime
         ensureVisiblePokemon()
         val pokemon = storedPokemon.firstOrNull {
             it.role == SlotRole.STEEL && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId)
@@ -206,9 +218,13 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
             it.role == SlotRole.NORMAL && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId)
         }
         if (normal != null) {
-            flushOutputBuffer(world, itemLimitFor(normal.power))
+            val normalProfile = WorkforcePokemonStats.profileFor(world, normal.pcId, normal.pokemonId)
+            val transferLimit = (itemLimitFor(normal.power) * normalProfile.yieldMultiplier).toInt().coerceAtLeast(1)
+            flushOutputBuffer(world, transferLimit)
         }
-        if (world.gameTime % intervalFor(pokemon.level).toLong() != 0L) {
+        val steelProfile = WorkforcePokemonStats.profileFor(world, pokemon.pcId, pokemon.pokemonId)
+        val interval = steelProfile.adjustedInterval(intervalFor(pokemon.level), minInterval = 12, maxInterval = 240)
+        if (world.gameTime % interval.toLong() != 0L) {
             return
         }
 
@@ -223,14 +239,15 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
                 }
             }
             pathAttempts.remove(pokemon.pokemonId)
-            crushItemEntity(world, nearbyItem, normal != null)
+            (entity ?: visiblePokemonEntity(world, pokemon))?.let {
+                WorkforcePokemonEffects.playSteelCrushWork(world, it, nearbyItem.blockPosition())
+            }
+            crushItemEntity(world, nearbyItem, normal != null, steelProfile)
             return
         }
 
         pathAttempts.remove(pokemon.pokemonId)
-        if (normal != null) {
-            crushFromAdjacentInventory(world)
-        }
+        crushFromAdjacentInventory(world, pokemon, normal != null, steelProfile)
     }
 
     private fun nearestCrushableItem(world: ServerLevel, range: Double): ItemEntity? {
@@ -239,8 +256,13 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
         }.minByOrNull { it.distanceToSqr(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5) }
     }
 
-    private fun crushItemEntity(world: ServerLevel, itemEntity: ItemEntity, canTransfer: Boolean): Boolean {
-        val result = crushResult(itemEntity.item) ?: return false
+    private fun crushItemEntity(
+        world: ServerLevel,
+        itemEntity: ItemEntity,
+        canTransfer: Boolean,
+        profile: WorkforcePokemonStats.PerformanceProfile
+    ): Boolean {
+        val result = crushResult(itemEntity.item, world, profile) ?: return false
         val input = itemEntity.item
         input.shrink(1)
         if (input.isEmpty) {
@@ -252,28 +274,45 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    private fun crushFromAdjacentInventory(world: ServerLevel): Boolean {
+    private fun crushFromAdjacentInventory(
+        world: ServerLevel,
+        pokemon: StoredPokemon,
+        canTransfer: Boolean,
+        profile: WorkforcePokemonStats.PerformanceProfile
+    ): Boolean {
         adjacentInventoryPositions().forEach { (pos, face) ->
             val container = world.getBlockEntity(pos) as? Container ?: return@forEach
             val slots = if (container is WorldlyContainer) container.getSlotsForFace(face).toList() else (0 until container.containerSize).toList()
             slots.forEach { slot ->
                 val stack = container.getItem(slot)
-                val result = crushResult(stack) ?: return@forEach
+                val result = crushResult(stack, world, profile) ?: return@forEach
+                visiblePokemonEntity(world, pokemon)?.let {
+                    WorkforcePokemonEffects.playSteelCrushWork(world, it, pos)
+                }
                 stack.shrink(1)
                 container.setChanged()
-                routeOutput(world, blockPos, result, true)
+                val dropPos = if (canTransfer) blockPos else blockPos.above()
+                routeOutput(world, dropPos, result, canTransfer)
                 return true
             }
         }
         return false
     }
 
-    private fun crushResult(input: ItemStack): ItemStack? {
+    private fun crushResult(
+        input: ItemStack,
+        world: ServerLevel? = null,
+        profile: WorkforcePokemonStats.PerformanceProfile? = null
+    ): ItemStack? {
         if (input.isEmpty) {
             return null
         }
-        val output = CRUSHING_RESULTS[input.item] ?: return null
-        return ItemStack(output, 2)
+        val base = CRUSHING_RESULTS[input.item]?.copy() ?: return null
+        if (world != null && profile != null) {
+            val factor = profile.rollCrushFactor(world.random)
+            base.count = (base.count * factor).toInt().coerceAtLeast(1)
+        }
+        return base
     }
 
     private fun routeOutput(world: ServerLevel, sourcePos: BlockPos, stack: ItemStack, canTransfer: Boolean) {
@@ -392,36 +431,18 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun ensureVisiblePokemon(world: ServerLevel, entry: StoredPokemon) {
-        val pokemon = Cobblemon.storage.getPC(entry.pcId, world.registryAccess())[entry.pokemonId] ?: return
-        var existing: Entity? = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == entry.linkId }
-        if (existing == null) {
-            val searchBox = AABB(blockPos).inflate(CobblemonWorkforceConfig.pokemonWanderRange.toDouble() + 10.0)
-            val entities = world.getEntitiesOfClass(Entity::class.java, searchBox) { ent ->
-                val tether = getTethering(ent)
-                tether != null && tether.pokemonId == entry.pokemonId
-            }
-            if (entities.isNotEmpty()) {
-                existing = entities.first()
-                for (i in 1 until entities.size) entities[i].discard()
-            }
-        }
-        if (!CobblemonWorkforceConfig.showPokemonOutside) {
-            existing?.discard()
-            if (pokemon.tetheringId == entry.linkId) pokemon.tetheringId = null
-            return
-        }
-        if (existing != null) {
-            keepTethered(existing, entry)
-            return
-        }
-        pokemon.tetheringId = entry.linkId
-        val entity = createPokemonEntity(world, pokemon) ?: return
-        val spawnPos = findVisibleSpawnPos(world, entity) ?: return
-        entity.setPos(spawnPos.center.subtract(0.0, 0.5, 0.0))
-        if (world.addFreshEntity(entity)) {
-            setTethering(entity, createVisibleTethering(entry, entity.id))
-            keepTethered(entity, entry)
-        }
+        WorkforceEntityHelper.ensureVisiblePokemon(
+            world = world,
+            blockPos = blockPos,
+            loadedAtTick = loadedAtTick,
+            pokemonId = entry.pokemonId,
+            pcId = entry.pcId,
+            linkId = entry.linkId,
+            showPokemonOutside = CobblemonWorkforceConfig.showPokemonOutside,
+            createTethering = { entityId -> createVisibleTethering(entry, entityId) },
+            findSpawnPos = { entity -> findVisibleSpawnPos(world, entity) },
+            loggerContext = "Poke Crusher"
+        )
     }
 
     private fun visiblePokemonEntity(world: ServerLevel, entry: StoredPokemon): Entity? {
@@ -564,18 +585,25 @@ class PokeCrusherBlockEntity(pos: BlockPos, state: BlockState) :
 
         private fun itemLimitFor(power: Int): Int = (4 + power / 10).coerceIn(4, 64)
 
-        private val CRUSHING_RESULTS: Map<Item, Item> by lazy {
+        private val CRUSHING_RESULTS: Map<Item, ItemStack> by lazy {
             mapOf(
-                Items.RAW_IRON to ModRegistry.IRON_DUST.get(),
-                Items.IRON_ORE to ModRegistry.IRON_DUST.get(),
-                Items.DEEPSLATE_IRON_ORE to ModRegistry.IRON_DUST.get(),
-                Items.RAW_COPPER to ModRegistry.COPPER_DUST.get(),
-                Items.COPPER_ORE to ModRegistry.COPPER_DUST.get(),
-                Items.DEEPSLATE_COPPER_ORE to ModRegistry.COPPER_DUST.get(),
-                Items.RAW_GOLD to ModRegistry.GOLD_DUST.get(),
-                Items.GOLD_ORE to ModRegistry.GOLD_DUST.get(),
-                Items.DEEPSLATE_GOLD_ORE to ModRegistry.GOLD_DUST.get(),
-                Items.ANCIENT_DEBRIS to Items.NETHERITE_SCRAP
+                Items.RAW_IRON to ItemStack(ModRegistry.IRON_DUST.get(), 2),
+                Items.IRON_ORE to ItemStack(ModRegistry.IRON_DUST.get(), 2),
+                Items.DEEPSLATE_IRON_ORE to ItemStack(ModRegistry.IRON_DUST.get(), 2),
+                Items.RAW_COPPER to ItemStack(ModRegistry.COPPER_DUST.get(), 2),
+                Items.COPPER_ORE to ItemStack(ModRegistry.COPPER_DUST.get(), 2),
+                Items.DEEPSLATE_COPPER_ORE to ItemStack(ModRegistry.COPPER_DUST.get(), 2),
+                Items.RAW_GOLD to ItemStack(ModRegistry.GOLD_DUST.get(), 2),
+                Items.GOLD_ORE to ItemStack(ModRegistry.GOLD_DUST.get(), 2),
+                Items.DEEPSLATE_GOLD_ORE to ItemStack(ModRegistry.GOLD_DUST.get(), 2),
+                Items.NETHER_GOLD_ORE to ItemStack(ModRegistry.GOLD_DUST.get(), 2),
+                Items.NETHER_QUARTZ_ORE to ItemStack(Items.QUARTZ, 2),
+                Items.ANCIENT_DEBRIS to ItemStack(Items.NETHERITE_SCRAP, 2),
+                Items.COBBLESTONE to ItemStack(Items.GRAVEL, 1),
+                Items.COBBLED_DEEPSLATE to ItemStack(Items.GRAVEL, 1),
+                Items.GRAVEL to ItemStack(Items.SAND, 1),
+                Items.SANDSTONE to ItemStack(Items.SAND, 4),
+                Items.RED_SANDSTONE to ItemStack(Items.RED_SAND, 4)
             )
         }
     }

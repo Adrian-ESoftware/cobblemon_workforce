@@ -31,6 +31,6 @@ side = "BOTH"
 [[dependencies.cobblemon_workforce]]
 modId = "cobblemon"
 type = "required"
-versionRange = "*"
+versionRange = "[1.8.2,)"
 ordering = "AFTER"
 side = "BOTH"

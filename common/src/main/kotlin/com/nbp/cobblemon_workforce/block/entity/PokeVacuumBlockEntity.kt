@@ -11,7 +11,11 @@ import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureHost
+import com.nbp.cobblemon_workforce.pasture.WorkforceEntityHelper
 import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
+import com.nbp.cobblemon_workforce.pokemon.WorkforcePokemonEffects
+import com.nbp.cobblemon_workforce.pokemon.WorkforcePokemonStats
 import java.util.UUID
 import kotlin.math.ceil
 import kotlin.math.min
@@ -37,21 +41,28 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 
 class PokeVacuumBlockEntity(pos: BlockPos, state: BlockState) :
-    BlockEntity(CobblemonWorkforceBlocks.POKE_VACUUM_BLOCK_ENTITY, pos, state) {
+    BlockEntity(CobblemonWorkforceBlocks.POKE_VACUUM_BLOCK_ENTITY, pos, state),
+    WorkforcePastureHost {
+
+    override val pastureDisplayName: String = "Poke Vacuum"
+    override val wrongTypeMessage: String = "Only Normal-type Pokemon can help this vacuum."
+    override fun slotLimit(): Int = 1
+    override fun onPasturedMessage(pokemon: Pokemon): String = "${pokemon.getDisplayName().string} is now collecting nearby items."
 
     private var storedPokemon: StoredPokemon? = null
     private val collectionBuffer = mutableListOf<ItemStack>()
     private var pathAttempts = 0
+    private var loadedAtTick: Long = -1L
 
     fun hasPokemon(): Boolean = storedPokemon != null
 
-    fun isOwner(player: ServerPlayer): Boolean = storedPokemon?.ownerId == player.uuid
+    override fun isOwner(player: ServerPlayer): Boolean = storedPokemon?.ownerId == player.uuid
 
-    fun canAddPokemon(): Boolean = storedPokemon == null
+    override fun canAddPokemon(): Boolean = storedPokemon == null
 
-    fun accepts(pokemon: Pokemon): Boolean = pokemon.types.any { it == ElementalTypes.NORMAL }
+    override fun accepts(pokemon: Pokemon): Boolean = pokemon.types.any { it == ElementalTypes.NORMAL }
 
-    fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
+    override fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
         if (!canAddPokemon() || !accepts(pokemon)) {
             return false
         }
@@ -73,7 +84,7 @@ class PokeVacuumBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun removePokemon(pokemonId: UUID): Boolean {
+    override fun removePokemon(pokemonId: UUID): Boolean {
         val stored = storedPokemon ?: return false
         if (stored.pokemonId != pokemonId) {
             return false
@@ -87,11 +98,11 @@ class PokeVacuumBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
+    override fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
         return storedPokemon?.let { it.ownerId == player.uuid && it.pokemonId == pokemonId } == true
     }
 
-    fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
+    override fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
         val stored = storedPokemon ?: return emptyList()
         return if (stored.ownerId == player.uuid) listOf(stored.pokemonId) else emptyList()
     }
@@ -111,7 +122,7 @@ class PokeVacuumBlockEntity(pos: BlockPos, state: BlockState) :
         }
     }
 
-    fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
+    override fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
         val entry = storedPokemon ?: return emptyList()
         val registryAccess = level?.server?.registryAccess() ?: viewer.registryAccess()
         val pokemon = Cobblemon.storage.getPC(entry.pcId, registryAccess)[entry.pokemonId] ?: return emptyList()
@@ -158,13 +169,17 @@ class PokeVacuumBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun tickVacuum(world: ServerLevel) {
+        if (loadedAtTick < 0L) loadedAtTick = world.gameTime
         val pokemon = storedPokemon ?: return
         ensureVisiblePokemon()
         if (!PokemonWorkforceStatus.isAwake(world, pokemon.pcId, pokemon.pokemonId)) {
             return
         }
-        flushCollectionBuffer(world, itemLimitFor(pokemon.vacuumPower))
-        if (world.gameTime % intervalFor(pokemon.vacuumPower).toLong() != 0L) {
+        val profile = WorkforcePokemonStats.profileFor(world, pokemon.pcId, pokemon.pokemonId)
+        val effectiveLimit = (itemLimitFor(pokemon.vacuumPower) * profile.yieldMultiplier).toInt().coerceAtLeast(1)
+        flushCollectionBuffer(world, effectiveLimit)
+        val interval = profile.adjustedInterval(intervalFor(pokemon.vacuumPower), minInterval = 4, maxInterval = 60)
+        if (world.gameTime % interval.toLong() != 0L) {
             return
         }
 
@@ -179,7 +194,10 @@ class PokeVacuumBlockEntity(pos: BlockPos, state: BlockState) :
         }
 
         pathAttempts = 0
-        var remainingItems = itemLimitFor(pokemon.vacuumPower)
+        (entity ?: visiblePokemonEntity(world, pokemon))?.let {
+            WorkforcePokemonEffects.playPsychicVacuumWork(world, it, target.blockPosition())
+        }
+        var remainingItems = effectiveLimit
         for (itemEntity in items.take(MAX_ITEM_ENTITIES_PER_SWEEP)) {
             if (remainingItems <= 0) {
                 break
@@ -337,44 +355,18 @@ class PokeVacuumBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun ensureVisiblePokemon(world: ServerLevel, entry: StoredPokemon) {
-        val pokemon = Cobblemon.storage.getPC(entry.pcId, world.registryAccess())[entry.pokemonId] ?: return
-        var existing: Entity? = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == entry.linkId }
-
-        if (existing == null) {
-            val searchBox = AABB(blockPos).inflate(CobblemonWorkforceConfig.pokemonWanderRange.toDouble() + 10.0)
-            val entities = world.getEntitiesOfClass(Entity::class.java, searchBox) { ent ->
-                val tether = getTethering(ent)
-                tether != null && tether.pokemonId == entry.pokemonId
-            }
-            if (entities.isNotEmpty()) {
-                existing = entities.first()
-                for (i in 1 until entities.size) {
-                    entities[i].discard()
-                }
-            }
-        }
-
-        if (!CobblemonWorkforceConfig.showPokemonOutside) {
-            existing?.discard()
-            if (pokemon.tetheringId == entry.linkId) {
-                pokemon.tetheringId = null
-            }
-            return
-        }
-
-        if (existing != null) {
-            keepTethered(existing, entry)
-            return
-        }
-
-        pokemon.tetheringId = entry.linkId
-        val entity = createPokemonEntity(world, pokemon) ?: return
-        val spawnPos = findVisibleSpawnPos(world, entity) ?: return
-        entity.setPos(spawnPos.center.subtract(0.0, 0.5, 0.0))
-        if (world.addFreshEntity(entity)) {
-            setTethering(entity, createVisibleTethering(entry, entity.id))
-            keepTethered(entity, entry)
-        }
+        WorkforceEntityHelper.ensureVisiblePokemon(
+            world = world,
+            blockPos = blockPos,
+            loadedAtTick = loadedAtTick,
+            pokemonId = entry.pokemonId,
+            pcId = entry.pcId,
+            linkId = entry.linkId,
+            showPokemonOutside = CobblemonWorkforceConfig.showPokemonOutside,
+            createTethering = { entityId -> createVisibleTethering(entry, entityId) },
+            findSpawnPos = { entity -> findVisibleSpawnPos(world, entity) },
+            loggerContext = "Poke Vacuum"
+        )
     }
 
     private fun visiblePokemonEntity(world: ServerLevel, entry: StoredPokemon): Entity? {

@@ -2,7 +2,7 @@ package com.nbp.cobblemon_workforce.block
 
 import com.mojang.serialization.MapCodec
 import com.nbp.cobblemon_workforce.block.entity.PokeFarmBlockEntity
-import com.nbp.cobblemon_workforce.pasture.PokeFarmPastureBridge
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureBridge
 import com.nbp.cobblemon_workforce.registry.ModRegistry
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
@@ -37,6 +37,12 @@ class PokeFarmBlock(properties: Properties) : PokeGeneratorBlock(properties) {
     }
 
     override fun codec(): MapCodec<out BaseEntityBlock> = CODEC
+
+    override fun workTooltipLines(): List<String> = listOf(
+        "1. Grass: Harvests mature crops and berries.",
+        "2. Water: Hydrates farmland and boosts crop growth.",
+        "3. Normal: Collects drops into adjacent chests."
+    )
 
 
 
@@ -123,7 +129,7 @@ class PokeFarmBlock(properties: Properties) : PokeGeneratorBlock(properties) {
 
         val basePos = if (state.getValue(PART) == GeneratorPart.TOP) pos.below() else pos
         val assistant = level.getBlockEntity(basePos) as? PokeFarmBlockEntity ?: return InteractionResult.SUCCESS
-        PokeFarmPastureBridge.open(player, basePos, assistant)
+        WorkforcePastureBridge.open(player, basePos, assistant)
         return InteractionResult.SUCCESS
     }
 

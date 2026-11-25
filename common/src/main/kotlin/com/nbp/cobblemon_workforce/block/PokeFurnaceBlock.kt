@@ -2,7 +2,7 @@ package com.nbp.cobblemon_workforce.block
 
 import com.mojang.serialization.MapCodec
 import com.nbp.cobblemon_workforce.block.entity.PokeFurnaceBlockEntity
-import com.nbp.cobblemon_workforce.pasture.PokeFurnacePastureBridge
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureBridge
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -27,6 +27,10 @@ class PokeFurnaceBlock(properties: Properties) : PokeGeneratorBlock(properties) 
     }
 
     override fun codec(): MapCodec<out BaseEntityBlock> = CODEC
+
+    override fun workTooltipLines(): List<String> = listOf(
+        "1. Fire: Fuels adjacent furnaces without coal and speeds up smelting."
+    )
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return if (state.getValue(PART) == GeneratorPart.BOTTOM) PokeFurnaceBlockEntity(pos, state) else null
@@ -56,7 +60,7 @@ class PokeFurnaceBlock(properties: Properties) : PokeGeneratorBlock(properties) 
         }
         val basePos = if (state.getValue(PART) == GeneratorPart.TOP) pos.below() else pos
         val furnace = level.getBlockEntity(basePos) as? PokeFurnaceBlockEntity ?: return InteractionResult.SUCCESS
-        PokeFurnacePastureBridge.open(player, basePos, furnace)
+        WorkforcePastureBridge.open(player, basePos, furnace)
         return InteractionResult.SUCCESS
     }
 

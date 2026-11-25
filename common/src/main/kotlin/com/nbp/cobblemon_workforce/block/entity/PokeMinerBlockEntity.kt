@@ -11,7 +11,11 @@ import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.nbp.cobblemon_workforce.block.CobblemonWorkforceBlocks
 import com.nbp.cobblemon_workforce.config.CobblemonWorkforceConfig
+import com.nbp.cobblemon_workforce.pasture.WorkforceEntityHelper
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureHost
 import com.nbp.cobblemon_workforce.pokemon.PokemonWorkforceStatus
+import com.nbp.cobblemon_workforce.pokemon.WorkforcePokemonEffects
+import com.nbp.cobblemon_workforce.pokemon.WorkforcePokemonStats
 import java.util.UUID
 import kotlin.math.ceil
 import kotlin.math.abs
@@ -19,10 +23,13 @@ import kotlin.math.min
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.HolderLookup
+import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.ListTag
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
 import net.minecraft.world.Container
 import net.minecraft.world.WorldlyContainer
 import net.minecraft.world.entity.Entity
@@ -39,31 +46,59 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 
 class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
-    BlockEntity(CobblemonWorkforceBlocks.POKE_MINER_BLOCK_ENTITY, pos, state) {
+    BlockEntity(CobblemonWorkforceBlocks.POKE_MINER_BLOCK_ENTITY, pos, state),
+    WorkforcePastureHost {
+
+    override val pastureDisplayName: String = "Poke Miner"
+    override val wrongTypeMessage: String = "Only Rock, Normal, Water, and Fire-type Pokemon can help this miner."
+    override val slotUnavailableMessage: String = "This Poke Miner does not have an available slot for that Pokemon type."
+    override fun onPasturedMessage(pokemon: Pokemon): String = "${pokemon.getDisplayName().string} is now mining nearby stone."
 
     var normalSlotUnlocked: Boolean = false
         private set
 
+    var waterSlotUnlocked: Boolean = false
+        private set
+
+    var fireSlotUnlocked: Boolean = false
+        private set
+
     private val storedPokemon = mutableListOf<StoredPokemon>()
     private val collectionBuffer = mutableListOf<ItemStack>()
+    private var activeRegenTarget: BlockPos? = null
+    private var loadedAtTick: Long = -1L
     private val pathAttempts = mutableMapOf<UUID, Int>()
 
     fun hasPokemon(): Boolean = storedPokemon.isNotEmpty()
 
-    fun isOwner(player: ServerPlayer): Boolean = storedPokemon.any { it.ownerId == player.uuid }
+    override fun isOwner(player: ServerPlayer): Boolean = storedPokemon.any { it.ownerId == player.uuid }
 
-    fun slotLimit(): Int = 1 + if (normalSlotUnlocked) 1 else 0
+    override fun slotLimit(): Int = 1 +
+        (if (normalSlotUnlocked) 1 else 0) +
+        (if (waterSlotUnlocked) 1 else 0) +
+        (if (fireSlotUnlocked) 1 else 0)
 
-    fun canAddPokemon(): Boolean = storedPokemon.none { it.role == SlotRole.ROCK } ||
-        normalSlotUnlocked && storedPokemon.none { it.role == SlotRole.NORMAL }
+    override fun canAddPokemon(): Boolean = storedPokemon.none { it.role == SlotRole.ROCK } ||
+        normalSlotUnlocked && storedPokemon.none { it.role == SlotRole.NORMAL } ||
+        waterSlotUnlocked && storedPokemon.none { it.role == SlotRole.WATER } ||
+        fireSlotUnlocked && storedPokemon.none { it.role == SlotRole.FIRE }
 
-    fun accepts(pokemon: Pokemon): Boolean {
-        return pokemon.types.any { it == ElementalTypes.ROCK || it == ElementalTypes.NORMAL }
+    override fun accepts(pokemon: Pokemon): Boolean {
+        return pokemon.types.any {
+            it == ElementalTypes.ROCK ||
+                it == ElementalTypes.NORMAL ||
+                it == ElementalTypes.WATER ||
+                it == ElementalTypes.FIRE
+        }
     }
 
-    fun canAddPokemon(pokemon: Pokemon): Boolean = slotRoleFor(pokemon) != null
+    override fun canAddPokemon(pokemon: Pokemon): Boolean = slotRoleFor(pokemon) != null
 
     fun canUpgradeNormalSlot(): Boolean = !normalSlotUnlocked
+
+    fun canUpgradeWaterSlot(): Boolean = !waterSlotUnlocked
+
+    fun canUpgradeFireSlot(): Boolean = !fireSlotUnlocked
 
     fun upgradeNormalSlot(): Boolean {
         if (!canUpgradeNormalSlot()) {
@@ -74,26 +109,54 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
+    fun upgradeWaterSlot(): Boolean {
+        if (!canUpgradeWaterSlot()) {
+            return false
+        }
+        waterSlotUnlocked = true
+        setChanged()
+        return true
+    }
+
+    fun upgradeFireSlot(): Boolean {
+        if (!canUpgradeFireSlot()) {
+            return false
+        }
+        fireSlotUnlocked = true
+        setChanged()
+        return true
+    }
+
     fun saveUpgradeData(): CompoundTag {
-        return CompoundTag().also { it.putBoolean("NormalSlotUnlocked", normalSlotUnlocked) }
+        return CompoundTag().also {
+            it.putBoolean("NormalSlotUnlocked", normalSlotUnlocked)
+            it.putBoolean("WaterSlotUnlocked", waterSlotUnlocked)
+            it.putBoolean("FireSlotUnlocked", fireSlotUnlocked)
+        }
     }
 
     fun loadUpgradeData(nbt: CompoundTag) {
         normalSlotUnlocked = nbt.getBoolean("NormalSlotUnlocked")
+        waterSlotUnlocked = nbt.getBoolean("WaterSlotUnlocked")
+        fireSlotUnlocked = nbt.getBoolean("FireSlotUnlocked")
         setChanged()
     }
 
     private fun slotRoleFor(pokemon: Pokemon): SlotRole? {
         val hasRock = pokemon.types.any { it == ElementalTypes.ROCK }
         val hasNormal = pokemon.types.any { it == ElementalTypes.NORMAL }
+        val hasWater = pokemon.types.any { it == ElementalTypes.WATER }
+        val hasFire = pokemon.types.any { it == ElementalTypes.FIRE }
         return when {
             hasRock && storedPokemon.none { it.role == SlotRole.ROCK } -> SlotRole.ROCK
             normalSlotUnlocked && hasNormal && storedPokemon.none { it.role == SlotRole.NORMAL } -> SlotRole.NORMAL
+            waterSlotUnlocked && hasWater && storedPokemon.none { it.role == SlotRole.WATER } -> SlotRole.WATER
+            fireSlotUnlocked && hasFire && storedPokemon.none { it.role == SlotRole.FIRE } -> SlotRole.FIRE
             else -> null
         }
     }
 
-    fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
+    override fun addPokemon(player: ServerPlayer, pokemon: Pokemon, pcId: UUID): Boolean {
         val role = slotRoleFor(pokemon) ?: return false
         if (storedPokemon.any { it.pokemonId == pokemon.uuid } || !accepts(pokemon)) {
             return false
@@ -117,7 +180,7 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun removePokemon(pokemonId: UUID): Boolean {
+    override fun removePokemon(pokemonId: UUID): Boolean {
         val removed = storedPokemon.firstOrNull { it.pokemonId == pokemonId } ?: return false
         releaseLinkedPokemon(removed)
         storedPokemon.remove(removed)
@@ -126,11 +189,11 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
         return true
     }
 
-    fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
+    override fun ownsPokemon(player: ServerPlayer, pokemonId: UUID): Boolean {
         return storedPokemon.any { it.ownerId == player.uuid && it.pokemonId == pokemonId }
     }
 
-    fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
+    override fun storedPokemonIdsFor(player: ServerPlayer): List<UUID> {
         return storedPokemon.filter { it.ownerId == player.uuid }.map { it.pokemonId }
     }
 
@@ -150,7 +213,7 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
         }
     }
 
-    fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
+    override fun toPastureDTOs(viewer: ServerPlayer): List<OpenPasturePacket.PasturePokemonDataDTO> {
         val registryAccess = level?.server?.registryAccess() ?: viewer.registryAccess()
         return storedPokemon.mapNotNull { entry ->
             val pokemon = Cobblemon.storage.getPC(entry.pcId, registryAccess)[entry.pokemonId] ?: return@mapNotNull null
@@ -179,6 +242,8 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
     override fun loadAdditional(nbt: CompoundTag, registryLookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, registryLookup)
         normalSlotUnlocked = nbt.getBoolean("NormalSlotUnlocked")
+        waterSlotUnlocked = nbt.getBoolean("WaterSlotUnlocked")
+        fireSlotUnlocked = nbt.getBoolean("FireSlotUnlocked")
         storedPokemon.clear()
         val list = nbt.getList("Pokemon", CompoundTag.TAG_COMPOUND.toInt())
         for (tag in list) {
@@ -187,6 +252,12 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
         }
         if (storedPokemon.any { it.role == SlotRole.NORMAL }) {
             normalSlotUnlocked = true
+        }
+        if (storedPokemon.any { it.role == SlotRole.WATER }) {
+            waterSlotUnlocked = true
+        }
+        if (storedPokemon.any { it.role == SlotRole.FIRE }) {
+            fireSlotUnlocked = true
         }
         collectionBuffer.clear()
         val bufferList = nbt.getList("CollectionBuffer", CompoundTag.TAG_COMPOUND.toInt())
@@ -199,6 +270,8 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
     override fun saveAdditional(nbt: CompoundTag, registryLookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, registryLookup)
         nbt.putBoolean("NormalSlotUnlocked", normalSlotUnlocked)
+        nbt.putBoolean("WaterSlotUnlocked", waterSlotUnlocked)
+        nbt.putBoolean("FireSlotUnlocked", fireSlotUnlocked)
         val list = ListTag()
         storedPokemon.forEach { list.add(it.toNbt()) }
         nbt.put("Pokemon", list)
@@ -208,6 +281,7 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun tickMiner(world: ServerLevel) {
+        if (loadedAtTick < 0L) loadedAtTick = world.gameTime
         ensureVisiblePokemon()
         val miner = storedPokemon.firstOrNull {
             it.role == SlotRole.ROCK && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId)
@@ -215,14 +289,43 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
         val normal = storedPokemon.firstOrNull {
             it.role == SlotRole.NORMAL && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId)
         }
-        if (normal != null) {
-            flushCollectionBuffer(world, itemLimitFor(normal.power))
+        val water = storedPokemon.firstOrNull {
+            it.role == SlotRole.WATER && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId)
         }
-        if (world.gameTime % intervalFor(miner.level).toLong() != 0L) {
+        val fire = storedPokemon.firstOrNull {
+            it.role == SlotRole.FIRE && PokemonWorkforceStatus.isAwake(world, it.pcId, it.pokemonId)
+        }
+        if (normal != null) {
+            val normalProfile = WorkforcePokemonStats.profileFor(world, normal.pcId, normal.pokemonId)
+            val transferLimit = (itemLimitFor(normal.power) * normalProfile.yieldMultiplier).toInt().coerceAtLeast(1)
+            flushCollectionBuffer(world, transferLimit)
+        }
+        if (water != null && fire != null) {
+            val currentRegen = activeRegenTarget?.takeIf { pos ->
+                val st = world.getBlockState(pos)
+                canMine(st, miner.level) && canRegenerateBlock(st, water.level, fire.level)
+            } ?: if (world.gameTime % 10L == 0L) {
+                findNextMineableBlock(world, rangeFor(miner.level), miner.level)?.takeIf { pos ->
+                    canRegenerateBlock(world.getBlockState(pos), water.level, fire.level)
+                }
+            } else {
+                null
+            }
+            activeRegenTarget = currentRegen
+            if (currentRegen != null) {
+                keepHelperNearTarget(world, water, currentRegen)
+                keepHelperNearTarget(world, fire, currentRegen)
+            }
+        } else {
+            activeRegenTarget = null
+        }
+        val minerProfile = WorkforcePokemonStats.profileFor(world, miner.pcId, miner.pokemonId)
+        val interval = minerProfile.adjustedInterval(intervalFor(miner.level), minInterval = 8, maxInterval = 240)
+        if (world.gameTime % interval.toLong() != 0L) {
             return
         }
 
-        val target = findNextMineableBlock(world, rangeFor(miner.level)) ?: return
+        val target = findNextMineableBlock(world, rangeFor(miner.level), miner.level) ?: return
         val entity = visiblePokemonEntity(world, miner)
         if (entity == null || !isNearTarget(entity, target)) {
             val attempts = (pathAttempts[miner.pokemonId] ?: 0) + 1
@@ -233,15 +336,29 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
         }
 
         pathAttempts.remove(miner.pokemonId)
+        (entity ?: visiblePokemonEntity(world, miner))?.let {
+            WorkforcePokemonEffects.playRockMineWork(world, it, target)
+        }
         val drops = mutableListOf<ItemStack>()
         val state = world.getBlockState(target)
         drops += Block.getDrops(state, world, target, world.getBlockEntity(target)).map { it.copy() }
-        drops += rollOreBonus(world, miner)
-        world.setBlock(target, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS)
+        drops += rollOreBonus(world, miner, state, minerProfile)
+        if (water != null && fire != null && canRegenerateBlock(state, water.level, fire.level)) {
+            activeRegenTarget = target
+            keepHelperNearTarget(world, water, target)
+            keepHelperNearTarget(world, fire, target)
+            world.setBlock(target, state, Block.UPDATE_CLIENTS)
+            visiblePokemonEntity(world, water)?.let { WorkforcePokemonEffects.playWaterFarmWork(world, it, target) }
+            visiblePokemonEntity(world, fire)?.let { WorkforcePokemonEffects.playFireFurnaceWork(world, it, target) }
+            world.sendParticles(ParticleTypes.CLOUD, target.x + 0.5, target.y + 0.7, target.z + 0.5, 4, 0.25, 0.2, 0.25, 0.02)
+            world.playSound(null, target, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.25f, 1.3f)
+        } else {
+            world.setBlock(target, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS)
+        }
         drops.forEach { routeDrop(world, target, it, normal != null) }
     }
 
-    private fun findNextMineableBlock(world: ServerLevel, range: Int): BlockPos? {
+    private fun findNextMineableBlock(world: ServerLevel, range: Int, pokemonLevel: Int): BlockPos? {
         return BlockPos.betweenClosed(
             blockPos.offset(-range, -range, -range),
             blockPos.offset(range, range, range)
@@ -250,7 +367,9 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
             .filter { candidate ->
                 candidate != blockPos &&
                     candidate != blockPos.above() &&
-                    canMine(world.getBlockState(candidate))
+                    !isBaseSupportBlock(candidate) &&
+                    canMine(world.getBlockState(candidate), pokemonLevel) &&
+                    hasExposedFace(world, candidate)
             }
             .minWithOrNull(
                 compareBy<BlockPos> { it.distSqr(blockPos) }
@@ -259,13 +378,69 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
             )
     }
 
-    private fun canMine(state: BlockState): Boolean {
-        return state.`is`(Blocks.STONE) || state.`is`(Blocks.SMOOTH_STONE) || state.`is`(Blocks.COBBLESTONE)
+    private fun hasExposedFace(world: ServerLevel, pos: BlockPos): Boolean {
+        return Direction.entries.any { dir ->
+            val adj = pos.relative(dir)
+            val state = world.getBlockState(adj)
+            state.isAir || !state.isCollisionShapeFullBlock(world, adj)
+        }
     }
 
-    private fun rollOreBonus(world: ServerLevel, pokemon: StoredPokemon): List<ItemStack> {
-        val table = ORE_TABLE.filter { pokemon.level >= it.minLevel }
-        if (table.isEmpty() || world.random.nextDouble() > oreChanceFor(pokemon.level, pokemon.power)) {
+    private fun isBaseSupportBlock(pos: BlockPos): Boolean {
+        return pos.y == blockPos.y - 1 &&
+            abs(pos.x - blockPos.x) <= 1 &&
+            abs(pos.z - blockPos.z) <= 1
+    }
+
+    private fun canRegenerateBlock(state: BlockState, waterLevel: Int, fireLevel: Int): Boolean {
+        val minLevel = minOf(waterLevel, fireLevel)
+        val requiredLevel = when {
+            state.`is`(Blocks.OBSIDIAN) || state.`is`(Blocks.CRYING_OBSIDIAN) -> 80
+            state.`is`(Blocks.NETHERRACK) || state.`is`(Blocks.BASALT) || state.`is`(Blocks.SMOOTH_BASALT) || state.`is`(Blocks.BLACKSTONE) -> 60
+            state.`is`(Blocks.DEEPSLATE) || state.`is`(Blocks.COBBLED_DEEPSLATE) -> 30
+            else -> 1
+        }
+        return minLevel >= requiredLevel
+    }
+
+    private fun canMine(state: BlockState, pokemonLevel: Int): Boolean {
+        if (state.`is`(Blocks.STONE) ||
+            state.`is`(Blocks.SMOOTH_STONE) ||
+            state.`is`(Blocks.COBBLESTONE) ||
+            state.`is`(Blocks.DEEPSLATE) ||
+            state.`is`(Blocks.COBBLED_DEEPSLATE) ||
+            state.`is`(Blocks.TUFF) ||
+            state.`is`(Blocks.ANDESITE) ||
+            state.`is`(Blocks.DIORITE) ||
+            state.`is`(Blocks.GRANITE) ||
+            state.`is`(Blocks.CALCITE)
+        ) {
+            return true
+        }
+        if (pokemonLevel >= NETHER_MINING_MIN_LEVEL && (
+                state.`is`(Blocks.NETHERRACK) ||
+                    state.`is`(Blocks.BASALT) ||
+                    state.`is`(Blocks.SMOOTH_BASALT) ||
+                    state.`is`(Blocks.BLACKSTONE) ||
+                    state.`is`(Blocks.OBSIDIAN) ||
+                    state.`is`(Blocks.CRYING_OBSIDIAN)
+                )
+        ) {
+            return true
+        }
+        return false
+    }
+
+    private fun rollOreBonus(
+        world: ServerLevel,
+        pokemon: StoredPokemon,
+        minedState: BlockState,
+        profile: WorkforcePokemonStats.PerformanceProfile
+    ): List<ItemStack> {
+        val baseTable = if (minedState.`is`(Blocks.NETHERRACK)) NETHER_ORE_TABLE else ORE_TABLE
+        val table = baseTable.filter { pokemon.level >= it.minLevel }
+        val chance = (oreChanceFor(pokemon.level, pokemon.power) * profile.yieldMultiplier).coerceIn(0.02, 0.95)
+        if (table.isEmpty() || world.random.nextDouble() > chance) {
             return emptyList()
         }
 
@@ -275,7 +450,9 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
             cursor += ore.weight
             roll < cursor
         }
-        return listOf(ItemStack(entry.item, entry.count(world, pokemon.level)))
+        val extraCount = profile.rollBonusDropCount(world.random)
+        val totalCount = (entry.count(world, pokemon.level) + extraCount).coerceAtLeast(1)
+        return listOf(ItemStack(entry.item, totalCount))
     }
 
     private fun routeDrop(world: ServerLevel, sourcePos: BlockPos, stack: ItemStack, collect: Boolean) {
@@ -397,48 +574,24 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
         val world = level as? ServerLevel ?: return
         val rock = storedPokemon.firstOrNull { it.role == SlotRole.ROCK }
         val normal = storedPokemon.firstOrNull { it.role == SlotRole.NORMAL }
-        listOfNotNull(rock, normal).forEach { ensureVisiblePokemon(world, it) }
+        val water = storedPokemon.firstOrNull { it.role == SlotRole.WATER }
+        val fire = storedPokemon.firstOrNull { it.role == SlotRole.FIRE }
+        listOfNotNull(rock, normal, water, fire).forEach { ensureVisiblePokemon(world, it) }
     }
 
     private fun ensureVisiblePokemon(world: ServerLevel, entry: StoredPokemon) {
-        val pokemon = Cobblemon.storage.getPC(entry.pcId, world.registryAccess())[entry.pokemonId] ?: return
-        var existing: Entity? = getPokemonEntity(pokemon)?.takeIf { it.isAlive && getTethering(it)?.tetheringId == entry.linkId }
-
-        if (existing == null) {
-            val searchBox = AABB(blockPos).inflate(CobblemonWorkforceConfig.pokemonWanderRange.toDouble() + 10.0)
-            val entities = world.getEntitiesOfClass(Entity::class.java, searchBox) { ent ->
-                val tether = getTethering(ent)
-                tether != null && tether.pokemonId == entry.pokemonId
-            }
-            if (entities.isNotEmpty()) {
-                existing = entities.first()
-                for (i in 1 until entities.size) {
-                    entities[i].discard()
-                }
-            }
-        }
-
-        if (!CobblemonWorkforceConfig.showPokemonOutside) {
-            existing?.discard()
-            if (pokemon.tetheringId == entry.linkId) {
-                pokemon.tetheringId = null
-            }
-            return
-        }
-
-        if (existing != null) {
-            keepTethered(existing, entry)
-            return
-        }
-
-        pokemon.tetheringId = entry.linkId
-        val entity = createPokemonEntity(world, pokemon) ?: return
-        val spawnPos = findVisibleSpawnPos(world, entity, entry.role) ?: return
-        entity.setPos(spawnPos.center.subtract(0.0, 0.5, 0.0))
-        if (world.addFreshEntity(entity)) {
-            setTethering(entity, createVisibleTethering(entry, entity.id))
-            keepTethered(entity, entry)
-        }
+        WorkforceEntityHelper.ensureVisiblePokemon(
+            world = world,
+            blockPos = blockPos,
+            loadedAtTick = loadedAtTick,
+            pokemonId = entry.pokemonId,
+            pcId = entry.pcId,
+            linkId = entry.linkId,
+            showPokemonOutside = CobblemonWorkforceConfig.showPokemonOutside,
+            createTethering = { entityId -> createVisibleTethering(entry, entityId) },
+            findSpawnPos = { entity -> findVisibleSpawnPos(world, entity, entry.role) },
+            loggerContext = "Poke Miner"
+        )
     }
 
     private fun visiblePokemonEntity(world: ServerLevel, entry: StoredPokemon): Entity? {
@@ -460,6 +613,19 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
         val dy = entity.y - target.y
         val dz = entity.z - (target.z + 0.5)
         return dx * dx + dy * dy + dz * dz <= WORK_DISTANCE_SQR
+    }
+
+    private fun keepHelperNearTarget(world: ServerLevel, entry: StoredPokemon, target: BlockPos) {
+        val entity = visiblePokemonEntity(world, entry) ?: return
+        val mob = entity as? Mob ?: return
+        if (!isNearTarget(entity, target)) {
+            if (world.gameTime % 10L == 0L) {
+                movePokemonToTarget(world, entry, entity, target)
+            }
+        } else {
+            mob.navigation.stop()
+        }
+        WorkforcePokemonEffects.lookAt(mob, target)
     }
 
     private fun keepTethered(entity: Entity, entry: StoredPokemon) {
@@ -495,6 +661,8 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
         val directions = when (role) {
             SlotRole.ROCK -> listOf(Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH)
             SlotRole.NORMAL -> listOf(Direction.SOUTH, Direction.WEST, Direction.EAST, Direction.NORTH)
+            SlotRole.WATER -> listOf(Direction.EAST, Direction.SOUTH, Direction.NORTH, Direction.WEST)
+            SlotRole.FIRE -> listOf(Direction.WEST, Direction.NORTH, Direction.SOUTH, Direction.EAST)
         }
         val wanderRange = CobblemonWorkforceConfig.pokemonWanderRange
         for (direction in directions) {
@@ -617,6 +785,16 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
             OreEntry(Items.DIAMOND, 85, 4, 1, 1),
             OreEntry(Items.EMERALD, 95, 2, 1, 1)
         )
+
+        private const val NETHER_MINING_MIN_LEVEL = 80
+
+        private val NETHER_ORE_TABLE = listOf(
+            OreEntry(Items.GOLD_NUGGET, 80, 35, 2, 6),
+            OreEntry(Items.QUARTZ, 80, 30, 1, 3),
+            OreEntry(Items.GLOWSTONE_DUST, 80, 22, 1, 4),
+            OreEntry(Items.RAW_GOLD, 80, 10, 1, 2),
+            OreEntry(Items.OBSIDIAN, 80, 6, 1, 1)
+        )
     }
 
     data class StoredPokemon(
@@ -663,7 +841,9 @@ class PokeMinerBlockEntity(pos: BlockPos, state: BlockState) :
 
     enum class SlotRole {
         ROCK,
-        NORMAL
+        NORMAL,
+        WATER,
+        FIRE
     }
 
     private data class OreEntry(

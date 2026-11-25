@@ -2,7 +2,7 @@ package com.nbp.cobblemon_workforce.block
 
 import com.mojang.serialization.MapCodec
 import com.nbp.cobblemon_workforce.block.entity.PokeMinerBlockEntity
-import com.nbp.cobblemon_workforce.pasture.PokeMinerPastureBridge
+import com.nbp.cobblemon_workforce.pasture.WorkforcePastureBridge
 import com.nbp.cobblemon_workforce.registry.ModRegistry
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
@@ -35,6 +35,12 @@ class PokeMinerBlock(properties: Properties) : PokeGeneratorBlock(properties) {
 
     override fun codec(): MapCodec<out BaseEntityBlock> = CODEC
 
+    override fun workTooltipLines(): List<String> = listOf(
+        "1. Rock: Mines stone, deepslate, and netherrack/obsidian (Lv. 80+).",
+        "2. Normal: Collects ores and stone into adjacent chests.",
+        "3. Water + Fire: Regenerate mined stone right after breaking (level-gated)."
+    )
+
     override fun useItemOn(
         stack: ItemStack,
         state: BlockState,
@@ -44,7 +50,10 @@ class PokeMinerBlock(properties: Properties) : PokeGeneratorBlock(properties) {
         hand: InteractionHand,
         hit: BlockHitResult
     ): ItemInteractionResult {
-        if (!stack.`is`(ModRegistry.POKE_FARM_NORMAL_SLOT_UPGRADE.get())) {
+        val isNormalUpgrade = stack.`is`(ModRegistry.POKE_FARM_NORMAL_SLOT_UPGRADE.get())
+        val isWaterUpgrade = stack.`is`(ModRegistry.POKE_FARM_WATER_SLOT_UPGRADE.get())
+        val isFireUpgrade = stack.`is`(ModRegistry.POKE_MINER_FIRE_SLOT_UPGRADE.get())
+        if (!isNormalUpgrade && !isWaterUpgrade && !isFireUpgrade) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         }
         if (level.isClientSide || player !is ServerPlayer) {
@@ -53,13 +62,18 @@ class PokeMinerBlock(properties: Properties) : PokeGeneratorBlock(properties) {
 
         val basePos = if (state.getValue(PART) == GeneratorPart.TOP) pos.below() else pos
         val miner = level.getBlockEntity(basePos) as? PokeMinerBlockEntity ?: return ItemInteractionResult.SUCCESS
-        if (miner.upgradeNormalSlot()) {
+        val (upgraded, slotName) = when {
+            isNormalUpgrade -> miner.upgradeNormalSlot() to "Normal"
+            isWaterUpgrade -> miner.upgradeWaterSlot() to "Water"
+            else -> miner.upgradeFireSlot() to "Fire"
+        }
+        if (upgraded) {
             if (!player.isCreative) {
                 stack.shrink(1)
             }
-            player.sendSystemMessage(Component.literal("Poke Miner unlocked its Normal Pokemon slot."))
+            player.sendSystemMessage(Component.literal("Poke Miner unlocked its $slotName Pokemon slot."))
         } else {
-            player.sendSystemMessage(Component.literal("This Poke Miner already has its Normal Pokemon slot unlocked."))
+            player.sendSystemMessage(Component.literal("This Poke Miner already has its $slotName Pokemon slot unlocked."))
         }
         return ItemInteractionResult.SUCCESS
     }
@@ -123,7 +137,7 @@ class PokeMinerBlock(properties: Properties) : PokeGeneratorBlock(properties) {
 
         val basePos = if (state.getValue(PART) == GeneratorPart.TOP) pos.below() else pos
         val miner = level.getBlockEntity(basePos) as? PokeMinerBlockEntity ?: return InteractionResult.SUCCESS
-        PokeMinerPastureBridge.open(player, basePos, miner)
+        WorkforcePastureBridge.open(player, basePos, miner)
         return InteractionResult.SUCCESS
     }
 
